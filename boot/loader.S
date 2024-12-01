@@ -13,61 +13,38 @@ CODE_DESC: dd  0x0000FFFF
 DATA_STACK_DESC: dd  0x0000FFFF
 			dd DESC_DATA_HIGH4
 
-;-------------------------------mistake---------------------------
-;In book,the low part of VIDEO_DESC is 0x80000007,what is "8"?
 VIDEO_DESC: dd  0x80000007  ;limit = (0xbffff-0xb8000) / 4k = 0x7
 		dd DESC_VIDEO_HIGH4
 ; you can check this one more time to understand this part.
 
 GDT_SIZE  equ $ - GDT_BASE   ;The val is 0x,and it indicate the size of GDT in memory
-GDT_LIMIT equ GDT_SIZE - 1   ;what is mean "-1"?sub one byte or...? Yes!
+GDT_LIMIT equ GDT_SIZE - 1   ;what is mean "-1"?sub one byte or...? Yes! it is one byte.
 times 60 dq 0   ;"dq":define quad-word(4 word/8 byte),create sixty empty descriptors
 SELECTOR_CODE equ (0x1 << 3) + TI_GDT + RPL0 ;Define the selector
 SELECTOR_DATA equ (0x2 << 3) + TI_GDT + RPL0
 SELECTOR_VIDEO equ (0x3 << 3) + TI_GDT + RPL0
 
 gdt_ptr  dw  GDT_LIMIT
-             dd GDT_BASE   ;define GDTR register
-loadermsg db '2 loader in real.' ;define message that will print when enter the protect mode.
+            dd GDT_BASE   ;We define a pointer and this pointer's address store GDT_LIMIT+GDT_BASE,we can use lgdt commend to copy this address's data to GDTR,it named initial GDTR.
 
 loader_start:  ;running Function program
-;-----------------------------------------------------------------------
-;INT 0x10(port):interrupt,  function's number:0x13 ,describe: print string
-;----------------------------------------------------------------------
-;input:
-;AH:function's number is 0x13
-;BH:the page number
-;BL:attribute
-;CX:The langth of string
-;(DH,DL): window's row and column(row,column)
-;ES:BP:The string's address in memory(ES:extend stack pointer register)(BP:base pointer)
-;AL:Output mode
-;void
-;-----------------------------------------------------------------------
-	mov sp,LOADER_BASE_ADDR
-	mov bp,loadermsg         ;ES:BP = address of loadermsg
-	mov cx,17                ;langth of string
-	mov ax,0x1301            ;AH=13,AL=01h
-	mov bx,0x001f            ;The page number is 0,and attribute is 0x1f:blue background and pink color of writting
-	mov dx,0x1800            ;window's row and column(row,column)
-	int 0x10                 ;The interrupt of 0x10:function's number is 0x13 in ax register,so,print string.
 ;------------------------GO to protect mode---------------------
 ;First:open the A20
 ;Second:load the GDT
 ;Third:make the PE of CR0 to "1".
 ;---------------------------------------------------------------------
-;First:open the A20 (Have some question about port of 0x92)
-in al,0x92
-or al,0000_0010B   ;(B:binary)
+;First:open the A20
+in al,0x92 ;The port of A20Gate
+or al,0000_0010B   ;(B:binary)To make the first bit to 1 to open A20.
 out 0x92,al
 ;Second:load the GDT
-lgdt [gdt_ptr]   ;Use lgdt function to write GDTR.
+lgdt [gdt_ptr]   ;Use lgdt instruction to initial GDTR,gdt_ptr:The parameter of GDTR's address point.GDTR:GDT register,it's 0~15 bit is GDT's boundary,16~47 bit is the GDT's base address in memory.
 ;Third:make the PE of CR0 to "1".
 mov eax,cr0
 or eax,0x00000001
 mov cr0,eax
 
-jmp dword SELECTOR_CODE:p_mode_start     ;The knowledge of Pipelines,it will be introduced in future.
+jmp dword SELECTOR_CODE:p_mode_start     ;[base address]:[offset value],refresh pipline + refresh "cache register of segement descripter",
 
 [bits 32]
 p_mode_start:
@@ -79,22 +56,20 @@ p_mode_start:
 	mov ax,SELECTOR_VIDEO
 	mov gs,ax
 
-	mov byte [gs:160],'P'     ;The default text display mode is 80*25(column,row),one row has eighty character,and one character has 2 byte,so the offset address is 80*2=160.
-
 ;------------------------------load kernel-----------------
 mov eax, KERNEL_START_SECTOR ;the sector number of kernel.bin in disk.
 mov ebx, KERNEL_BIN_BASE_ADDR ;After getting the kernel.bin from disk,writing kernel.bin to address in ebx in memory.
-mov ecx, 13 ;The number of watting to be read from sector.
+mov ecx, 200 ;The number of watting to be read from sector.
+;--------------mistake-------------------
+call rd_disk_m_32      ;This function have some problem,maybe can not correctly use 32 bit register.
+;----------------------------------------
 
-call rd_disk_m_32
-;____________________________________________
-
-;Create PDT and PT and initial
+;Create PDT and PT and initial（Page directory table and Page table）
 call setup_page
 
-;write GDT's address and offset value to memory of gdt_ptr
-sgdt [gdt_ptr]   ;gdt_ptr is a pointer,it's high 16bit is GDT_LIMIT,and it's low 32bit is GDT_BASE
-mov ebx,[gdt_ptr + 2]  ;make ebx store GDT's base address("+2" mains gdt_ptr's high 2Byte)
+;write GDT's address and offset value to memory which is pointed by gdt_ptr
+sgdt [gdt_ptr]   ;dump the data from GDRT to space which is pointed by gdt_ptr. 
+mov ebx,[gdt_ptr + 2]  ;make ebx store GDT's base address
 or dword [ebx + 0x18 + 4],0xc0000000 ;ebx + 0x18(0x18:24Byte,this is third segement descriptor(Video segement descriptor),ebx + 0x18 + 4:this is video segement descriptor's high 32bit,and we want to rechange it's segement base address to 3G~4G virtual space address.(you can see segement descriptor's structure).
 add dword [gdt_ptr + 2], 0xc0000000
 
@@ -169,27 +144,27 @@ setup_page:
 	add eax,0x1000
 	loop .create_kernel_pde
 	ret
-;Conclusion: we make 0 and 768th PDE to point to first PT,we have explain that we use 768th and above PDEs to finish translation about kernel(virtual address to physic address),but we also explain why we use 0th PDE to point to first PT.
+;Conclusion: we make 0 and 768th PDE to point to first PT,we have explained that we use 768th and above PDEs to finish translation about kernel(virtual address to physic address),but we also explain why we use 0th PDE to point to first PT.
 ;We must know that our loader is stored in low 1M physic address.
 ;When we in real mode,we use (segement_base_address:offset_address) to visit memory,and we already writted these address in loader.S and boot.inc,so,we can use low 1M physic space to run loader,
 ;When we use loader program to open A20 and set cr0,cr3,we finished to enter protect mode,at that time, our visiting memory's methors become to page mode.
 ;However,in loader.S,we don't have address about high 3G~4G in virtual address.So,if we don't solve this problem,at the time of we launching page mode,the loader suddently can't find it's program,because as we designing,it's line address is not point to low 1M physic space(Just 3G~4G virtual adderss can point to kernel address.).
 ;As you can see,the way we solve this problem is make the first PDE(0th) to store first PT,and the first PT point to low 4M physic address,as this way,loader use it's line address to find it's program is successful!!
 
-;----------------------------------------------------rd_disk_m_32---------have some mistake---------
+;----------------------------------------------------rd_disk_m_32---------Have some mistake---------
 rd_disk_m_32:
 	mov esi,eax
 	mov edi,ecx
 	
 ;first step
 	mov dx,0x1f2
-	mov al,cl
-	out dx,al
+	mov ax,cx
+	out dx,ax
 	
 	mov eax,esi
 ;second step
 	mov dx,0x1f3
-	out dx,al
+	out dx,ax
 
 	mov cl,8
 	shr eax,cl
@@ -217,16 +192,16 @@ rd_disk_m_32:
 	cmp al,0x08
 	jnz .not_ready
 ;fifth step
-	mov ax,di
-	mov dx,256
-	mul dx
-	mov cx,ax
+	mov eax,edi
+	mov edx,256   ;"in" operation's one step can read 2 byte data,so 512/2=256
+	mul edx
+	mov ecx,eax
 
 	mov dx,0x1f0
   .go_on_read:
 	in ax,dx
-	mov [bx],ax
-	add bx,2
+	mov [ebx],ax
+	add ebx,2
 	loop .go_on_read
 	ret
 	
