@@ -1,6 +1,6 @@
 %include "boot.inc"
 SECTION MBR vstart=0x7c00
-	mov ax,cs,
+	mov ax,cs
 	mov ds,ax
 	mov es,ax
 	mov ss,ax
@@ -67,8 +67,8 @@ rd_disk_m_16:
 	out dx,al
 
 	shr eax,cl           ;The LBA address is have 28 bit,so there have 4 bit need to store.
-	and al,0x0f          ;0x0f:0000,1111,al store the last 4 bit LBA address,"and"operation can make sure the data is right.
-	or al,0xe0           ;0xe0:1110,0000, create the high bit of device register,it's fifth and seventh bit is always be 1,and it's sixth bit set 1 is tell CPU that this address use LBA mode.
+	and al,0x0f          ;0x0f = 0000_1111,al store the last 4 bit LBA address,"and"operation can make sure the data is right.
+	or al,0xe0           ;0xe0 = 1110_0000, create the high bit of device register,it's fifth and seventh bit is always be 1,and it's sixth bit set 1 is tell CPU that this address use LBA mode.
 	mov dx,0x1f6         ;set device register,this register have 8 bit.
 	out dx,al
 	
@@ -80,9 +80,9 @@ rd_disk_m_16:
 ;Fouth step:Analysize the state of disk
    .not_ready:
 	nop            ;empty operation,make a relax.
-	in al,dx       ;when in reading mode,0x1f7 function is status,"in" operation is reading the 0x1f7's value to al register,one step can read 2 byte.
-	and al,0x88    ;0x88:1000,1000,retain the seventh bit and third bit,if third bit is "1",it indicate that value is ready,if seventh bit is "1",it indicate that disk is busy now,maybe we only need to judge third byte.
-	cmp al,0x08    ;0x08:00001000,use "cmp" operation to "-",to judge whether the third bit is "1",and cmp can set the flag by above caculation.We can use ZF flag to judge the outcome of cmp.
+	in al,dx       ;when in reading mode,0x1f7 function is status,"in" operation is reading the 0x1f7's value to al register,one step can read 2 Byte.
+	and al,0x88    ;0x88 = 1000_1000,retain the seventh bit and third bit,if third bit is "1",it indicate that value is ready,if seventh bit is "1",it indicate that disk is busy now,maybe we only need to judge third bit.
+	cmp al,0x08    ;0x08 = 00001000,use "cmp" operation to "-",to judge whether the third bit is "1",and cmp can set the flag by above caculation.We can use ZF flag to judge the outcome of cmp.
 	jnz .not_ready ;jnz can inquire the ZF flag,and if ZF is 0,it indicate that the third bit of status is "1",it indicate that CPU can read the value,if ZF is 1,it indicate the third bit of status is "0",it indicate that disk is busy now(the seventh bit is absualutaly "1"),so go back to .not_ready.
 
 ;Firth step:reading data from port of 0x1f0
