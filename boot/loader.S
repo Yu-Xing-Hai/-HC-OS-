@@ -56,7 +56,7 @@ p_mode_start:
 	mov ax,SELECTOR_VIDEO
 	mov gs,ax
 
-;------------------------------load kernel-----------------
+;------------------------------load kernel---------------------------
 mov eax, KERNEL_START_SECTOR ;the sector number of kernel.bin in disk.
 mov ebx, KERNEL_BIN_BASE_ADDR ;After getting the kernel.bin from disk,writing kernel.bin to address in ebx in memory.
 mov ecx, 200 ;The number of watting to be read from sector.
@@ -92,7 +92,7 @@ jmp SELECTOR_CODE:enter_kernel
 enter_kernel:
 	call kernel_init
 	mov esp, 0xc009f000
-	jmp KERNEL_ENTRY_POINT ;use address 0x1500 to test
+	jmp KERNEL_ENTRY_POINT ;use address 0x1500 to test？
 
 ;------------Create the PDE and PTE-------------------
 setup_page:
@@ -157,31 +157,31 @@ rd_disk_m_32:
 	mov edi,ecx
 	
 ;first step
-	mov dx,0x1f2
-	mov ax,cx
-	out dx,ax
+	mov edx,0x1f2
+	mov al,cl
+	out dx,al
 	
 	mov eax,esi
 ;second step
-	mov dx,0x1f3
-	out dx,ax
+	mov edx,0x1f3
+	out dx,al
 
 	mov cl,8
 	shr eax,cl
-	mov dx,0x1f4
+	mov edx,0x1f4
 	out dx,al
 
 	shr eax,cl
-	mov dx,0x1f5
+	mov edx,0x1f5
 	out dx,al
 
 	shr eax,cl
 	and al,0x0f
 	or al,0xe0
-	mov dx,0x1f6
+	mov edx,0x1f6
 	out dx,al
 ;third step
-	mov dx,0x1f7
+	mov edx,0x1f7
 	mov al,0x20
 	out dx,al
 ;forth step
@@ -197,10 +197,10 @@ rd_disk_m_32:
 	mul edx
 	mov ecx,eax
 
-	mov dx,0x1f0
+	mov edx,0x1f0
   .go_on_read:
 	in ax,dx
-	mov [ebx],ax
+	mov [ebx],eax
 	add ebx,2
 	loop .go_on_read
 	ret
