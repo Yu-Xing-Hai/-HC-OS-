@@ -56,6 +56,8 @@ put_char:
     mov byte [gs:bx], 0x07
     shr bx, 1
     inc bx
+    cmp bx, 2000  ;if cursor's val < 2000,it indicate that the address is not the end of video memory.
+    jl .set_cursor
 .is_line_feed:
 .is_carriage_return:
     xor dx, dx
@@ -88,3 +90,24 @@ put_char:
 .put_char_done:
     popad  ;is the otherside of pushad
     ret    ;return from put_char function.
+
+;--------------put_str----------
+global put_str
+put_str:
+    push ebx
+    push ecx
+    xor ecx, ecx
+    mov ebx, [esp + 12] ;why is 12?:one return address,two register.
+.goon:
+    mov cl, [ebx]
+    cmp cl, 0
+    jz .str_over
+    push ecx
+    call put_char
+    add esp, 4
+    inc ebx
+    jmp .goon
+.str_over:
+    pop ecx
+    pop ebx
+    ret
