@@ -159,6 +159,12 @@ put_int:
     jmp .put_each_num
 .full0:
     mov cl, '0'
+;the program in below(on .full0) is created by myself,because i think, when all int number is '0',and at that time,the edi also is 8,we can not use this commend `mov cl,[put_int_buffer+edi]`,the cl register store some data that we don't know,it is so dangerous.
+    push ecx
+    call put_char
+    add esp, 4
+    popad
+    ret
 .put_each_num:
     push ecx
     call put_char
