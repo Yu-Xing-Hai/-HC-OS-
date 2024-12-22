@@ -2,6 +2,9 @@ TI_GDT equ 0
 RPL0 equ 0
 SELECTOR_VIDEO equ (0x0003<<3) + TI_GDT + RPL0 ;create SELECTOR_VIDEO.
 
+section .data
+put_int_buffer dq 0  ;this buffer is used to translate int to char
+
 [bits 32]
 section .text
 ;---------------------put_char--------------
@@ -110,4 +113,59 @@ put_str:
 .str_over:
     pop ecx
     pop ebx
+    ret
+;-----------------put_int-----------------
+;Payattention!!
+;The bochs's memory is Little Endian.
+;we want to print char in screen by Big Endian(human's habit)like 15,0xfc0 and so on.
+;so, we need two step;
+;First step: make each int number to it's ASCLL.
+;Second step: print each int number's ASCLL.
+global put_int
+put_int:
+    pushad
+    mov ebp, esp
+    mov eax, [ebp+4*9] ;get the int number to eax,and 4*9 is means that one call's return address and eight register.
+    mov edx, eax
+    mov edi, 7
+    mov ecx, 8
+    mov ebx, put_int_buffer ;ebx is pointing to buffer address.
+.16based_4bits:
+    and edx, 0x0000000F ;only remian the int number's low 8bit.
+    cmp edx, 9
+    jg .is_A2F  ;"A2F" is "A to F".
+    add edx, '0'  ;Make int number to ASCLL
+    jmp .store
+.is_A2F:
+    sub edx, 10
+    add edx, 'A'  ;Make int number to ASCLL(Hex)
+.store:
+    mov [ebx+edi], dl
+    dec edi
+    shr eax, 4
+    mov edx, eax
+    loop .16based_4bits
+.ready_to_print:
+    inc edi
+.skip_prefix_0:
+    cmp edi, 8
+    je .full0
+.go_on_skip:
+    mov cl, [put_int_buffer+edi]
+    inc edi
+    cmp cl, '0'
+    je .skip_prefix_0
+    dec edi
+    jmp .put_each_num
+.full0:
+    mov cl, '0'
+.put_each_num:
+    push ecx
+    call put_char
+    add esp, 4
+    inc edi
+    mov cl, [put_int_buffer+edi]
+    cmp edi, 8
+    jl .put_each_num
+    popad
     ret
