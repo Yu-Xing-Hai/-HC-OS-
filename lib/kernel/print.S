@@ -61,6 +61,7 @@ put_char:
     inc bx
     cmp bx, 2000  ;if cursor's val < 2000,it indicate that the address is not the end of video memory.
     jl .set_cursor
+
 .is_line_feed:
 .is_carriage_return:
     xor dx, dx
@@ -70,12 +71,34 @@ put_char:
     div si
 
     sub bx, dx
+
 .is_carriage_return_end:
     add bx, 80
     cmp bx, 2000
+
 .is_line_feed_end:
     jl .set_cursor
-;_____________Pay attention : this code is not achieving Scroll!________________________________________
+
+;-------------achieve scroll-------------------
+;the scroll's principle is put the char between 1 row and 24 row to the row between 0 and 23.
+.roll_screen:
+    cld  ;clean direction, set eflags's DF to 0, so when execute "movsd", esi and edi will add the size of data.
+    mov ecx, 960   ;the mumber waited to carry is 2000-80=1920. totally have 1920*2=3840 Byte.Onces carry 4 Byte,so we need 3840/4=960 times.
+
+    mov esi, 0xc00b80a0  ;the head of first row
+    mov edi, 0xc00b8000  ;the head of zero row
+    rep movsd   ;function: carry 4 Byte data from ds:esi to es:edi
+
+;--------------padding the last row to empty-------------
+    mov ebx, 3840  ;1920*2Byte=3840
+    mov ecx, 80
+.cls:
+    mov word [gs:ebx], 0x0720  ;the space bar which has black background and white front.
+    add ebx, 2  ;one char has 2 Byte.
+    loop .cls
+    mov bx, 1920  ;put cursor to head of last row.
+
+;------set cuosor's address with register of bx.
 .set_cursor:
     mov dx, 0x03d4
     mov al, 0x0e
