@@ -3,7 +3,6 @@
 %define ZERO push 0
 
 extern put_str
-extern idt_table
 
 section .data
 intr_str db "interrupt occur!", 0xa, 0
@@ -14,38 +13,22 @@ intr_entry_table:         ;this address will be used to store all entrances of i
 section .text
 intr%1entry:        ;intr + %1 + entry to create this name.
    %2          ;if %2=ZERO,push 0, if %2=ERROR_CODE,nop.
-   push ds
-   push es
-   push fs
-   push gs
-   pushad
+   push intr_str
+   call put_str
+   add esp, 4     ;skip the intr_str in stack.
    
    mov al, 0x20   ;the commend of "EOI(end of interrupt)"
    out 0xa0, al
    out 0x20, al
 
-   push %1
-
-   call [idt_table + %1*4]
-   jmp intr_exit
+   add esp, 4     ;skip the error_code or 0 in stack
+   iret
 
 section .data     ;after compile,these port of ".data" will be merged, so the commend of "dd" will write address of "intr%1entry" below "intr_entry_table:" and these address compose a array.
    dd intr%1entry
 
 %endmacro
 
-section .text
-global intr_exit
-intr_exit:
-   add esp, 4   ;skip the number of interrupt
-   iret
-   popad
-   pop gs
-   pop fs
-   pop es
-   pop ds
-   add esp, 4   ;skip the error_code or 0 in stack
-   
 VECTOR 0x00,ZERO
 VECTOR 0x01,ZERO
 VECTOR 0x02,ZERO
