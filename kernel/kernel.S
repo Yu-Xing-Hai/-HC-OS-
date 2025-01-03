@@ -38,13 +38,13 @@ section .text
 global intr_exit
 intr_exit:
    add esp, 4   ;skip the number of interrupt
-   iret
    popad
    pop gs
    pop fs
    pop es
    pop ds
    add esp, 4   ;skip the error_code or 0 in stack
+   iret
    
 VECTOR 0x00,ZERO
 VECTOR 0x01,ZERO
