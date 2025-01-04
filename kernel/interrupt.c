@@ -28,7 +28,15 @@ char* intr_name[IDT_DESC_CNT];
 intr_handler idt_table[IDT_DESC_CNT];
 
 static void general_intr_handler(uint8_t vec_nr) {
-   if(vec_nr == 0x27 || vec_nr == 0x2f) {
+   /*if(vec_nr == 0x27 || vec_nr == 0x2f) {
+      return;
+   }*/
+   int32_t eipRegister;
+   if(vec_nr == 0xD) {  //the program of mistake's search.
+      asm volatile("movl 0xc009efd4, %%eax":"=a"(eipRegister):"a"(eipRegister));
+      put_str("The mistake's occured address(eip) is : ");
+      put_int(eipRegister);
+      put_char('\n');
       return;
    }
    put_str("int vector : 0x");
