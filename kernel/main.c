@@ -1,12 +1,11 @@
 #include "print.h"
 #include "init.h"
+#include "debug.h"
 
-void main(void) {
+int main(void) {
 	put_str("I am kernel\n");
 	init_all();
-   	asm volatile("sti"); 
-   	/*the directive of "sti" is open interrupt, 
-   	it set eflags's IF to 1,
-   	so CPU can process the interrupt signal from 8259A.*/
+   	ASSERT(1==2);
 	while(1);
+	return 0;
 }
