@@ -9,6 +9,8 @@
 #define PIC_S_CTRL 0xa0
 #define PIC_S_DATA 0xa1
 
+#define EFLAGS_IF  0x00000200  //IF is 1,open the interrupt
+#define GET_EFLAGS(EFLAG_VAR) asm volatile("pushfl; popl %0":"=g"(EFLAG_VAR))  //pushfl: push the eflag to stack
 
 struct gate_desc {  //the struct of interrupt gate descriptor.
    uint16_t  func_offset_low_word;
@@ -104,6 +106,42 @@ static void pic_init(void) {
    outb(PIC_S_DATA, 0xff);
 
    put_str("pic_init done\n");
+}
+
+enum intr_status intr_get_status() {
+   uint32_t eflags = 0;
+   GET_EFLAGS(eflags);
+   return (EFLAGS_IF & eflags) ? INTR_ON : INTR_OFF;
+}
+
+enum intr_status intr_enable() {
+   enum intr_status old_status;
+   if(INTR_ON == intr_get_status()) {
+      old_status = INTR_ON;
+      return old_status;
+   }
+   else {
+      old_status = INTR_OFF;
+      asm volatile("sti");
+      return old_status;
+   }
+}
+
+enum intr_status intr_disable() {
+   enum intr_status old_status;
+   if(INTR_ON == intr_get_status()) {
+      old_status = INTR_ON;
+      asm volatile("cli" : : : "memory");
+      return old_status;
+   }
+   else {
+      old_status = INTR_OFF;
+      return old_status;
+   }
+}
+
+enum intr_status intr_set_status(enum intr_status status) {
+   return status & INTR_ON ? intr_enable() : intr_disable();
 }
 
 /*Finish all initial work about interrupt*/
