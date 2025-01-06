@@ -2,6 +2,7 @@
 #include "stdint.h"
 #include "global.h"
 #include "io.h"
+#include "print.h"
 
 #define IDT_DESC_CNT 0x21  //the quantity of interrupt which we support at this time.
 #define PIC_M_CTRL 0X20
