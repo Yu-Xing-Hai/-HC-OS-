@@ -37,7 +37,7 @@ SECTION MBR vstart=0x7c00
 	mov cx,4                     ;The number of sector of watting to read.
 	call rd_disk_m_16            ;call the function
 
-	jmp LOADER_BASE_ADDR         ;Move to read bootloader.
+	jmp LOADER_BASE_ADDR + 0x300       ;Move to read bootloader(just go to loader_start function).
 
 ;----------------------------------------------------------------------------------------------------------
 ;function:reading sector of disk and the sector number is n;
