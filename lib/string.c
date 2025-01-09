@@ -6,8 +6,9 @@
 void memset(void* dst_, uint8_t value, uint32_t size) {
     ASSERT(dst_ != NULL);  //if dst_ is NULL, it will trigger error.
     uint8_t* dst = (uint8_t*)dst_;
-    while(size-- >  0)
+    while(size-- > 0) {
         *dst++ = value;
+    }
 }
 
 void memcpy(void* dst_, const void* src_, uint32_t size) {

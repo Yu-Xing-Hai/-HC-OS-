@@ -3,6 +3,7 @@
 #include "print.h"
 #include "debug.h"
 #include "string.h"
+#include "bitmap.h"
 
 #define PG_SIZE 4096  //4kB = 4 * 1024 = 4096 Byte
 /*
@@ -22,7 +23,7 @@ struct pool {   //used to manage physic memory.
 };
 
 #define PDE_IDX(addr) ((addr & 0xffc00000) >> 22)  //get high 10 bit of 32 address
-#define PTE_IDX(addr) ((addr & 0x003ff000) >> 22)  //get mid 10 bit of 32 address
+#define PTE_IDX(addr) ((addr & 0x003ff000) >> 12)  //get mid 10 bit of 32 address
 
 struct pool kernel_pool, user_pool; //manage physic
 struct virtual_addr kernel_vaddr;   //manage virtual
@@ -87,7 +88,7 @@ static void page_table_add(void* _vaddr, void* _page_phyaddr) {
 /**************************************8pay attention!!*******************************/
 /*if we want execute *pte, we must make sure we have finished create pde,if we don's create pde and execute *pte, we will make page_fault*/
     if(*pde & 0x00000001) {  //the attribute of "P",it indicate whether this pte exist.
-        ASSERT(!(*pte & 0x00000001));  //if we want create pte,so,it's "P" must 0.
+        //ASSERT(!(*pte & 0x00000001));  //if we want create pte,so,it's "P" must 0.
         if(!(*pte & 0x00000001)) {  //check more times to make sure safety.
             *pte = (page_phyaddr | PG_US_U | PG_RW_W | PG_P_1);  //structure of pte.
         }
@@ -120,7 +121,7 @@ void* malloc_page(enum pool_flags pf, uint32_t pg_cnt) {
     }
 
     uint32_t vaddr = (uint32_t)vaddr_start, cnt = pg_cnt;
-    struct pool* mem_pool = pf & PF_KERNEL ? &kernel_pool : &user_pool;  //make sure to use which type of pool to destribute physic page.
+    struct pool* mem_pool = pf & PF_KERNEL ? &kernel_pool : &user_pool;  //make sure to use which type of pool to destribute physic page,this pointer(mem_pool) point to pool structure.
 
     /*virtual address is continuous,but physic address could not be continuous,so we divide these three function from one cycle,
     and we can apply more virtual page onetime instead of applying virtual page one by one,
@@ -149,7 +150,7 @@ void* get_kernel_pages(uint32_t pg_cnt) {
 /*initialize memory pool and ralated structures*/
 static void mem_pool_init(uint32_t all_mem) {
     put_str("mem_pool_init start\n");
-    uint32_t page_table_size = PG_SIZE * 256;  //used to record the Byte's quantity of (PDT add PT). The PDT's 769~1022 totally have 254 PDE,these point to 254 page,0 and 769 point to same one page(this page point to low 1MB physic memory),1023 point to PDT,so,totally have 256 page,these page have be occupied.
+    uint32_t page_table_size = PG_SIZE * 256;  //used to record the Byte's quantity of (PDT add PT). The PDT's 769~1022(kernel space) totally have 254 PDE,these point to 254 page,0 and 769 point to same one page(this page point to low 1MB physic memory),1023 point to PDT,so,totally have 256 page,these page have be occupied.
     uint32_t used_mem = page_table_size + 0x100000;  //0x100000 is low 1MB physic memory.
     uint32_t free_mem = all_mem - used_mem;
     uint16_t all_free_page = free_mem / PG_SIZE;
@@ -189,11 +190,16 @@ static void mem_pool_init(uint32_t all_mem) {
     bitmap_init(&kernel_pool.pool_bitmap);
     bitmap_init(&user_pool.pool_bitmap);
 
-    /*initialize kernel virtual address's bitmap,because this is used to contrlo physic-kernel-heap,so, it's size is same to kernel memory pool.*/
+    /*initialize kernel virtual address's bitmap,because this is used to control physic-kernel-heap,so, it's size is same to kernel memory pool.*/
     kernel_vaddr.vaddr_bitmap.btmp_bytes_len = kbm_length;
     kernel_vaddr.vaddr_bitmap.bits = (void*)(MEM_BITMAP_BASE + kbm_length + ubm_length);
+    put_str("kernel_vaddr_bitmap_start: ");
+    put_int((int)kernel_vaddr.vaddr_bitmap.bits);
 
     kernel_vaddr.vaddr_start = K_HEAP_START;
+    put_str("  kernel_vaddr_start: ");
+    put_int(K_HEAP_START);
+    put_str("\n");
     bitmap_init(&kernel_vaddr.vaddr_bitmap);
     put_str("mem_pool_init done\n");
 }
