@@ -1,7 +1,6 @@
 %include "boot.inc"
 section loader vstart=LOADER_BASE_ADDR
 LOADER_STACK_TOP  equ LOADER_BASE_ADDR
-jmp loader_start
 
 ;create the GDT and it's descriptor
 GDT_BASE:  dd  0x00000000
@@ -14,37 +13,112 @@ DATA_STACK_DESC: dd  0x0000FFFF
 			dd DESC_DATA_HIGH4
 
 VIDEO_DESC: dd  0x80000007  ;limit = (0xbffff-0xb8000) / 4k = 0x7
-		dd DESC_VIDEO_HIGH4
-; you can check this one more time to understand this part.
+		dd DESC_VIDEO_HIGH4		; you can check this one more time to understand this part.
 
 GDT_SIZE  equ $ - GDT_BASE   ;The val is 0x,and it indicate the size of GDT in memory
 GDT_LIMIT equ GDT_SIZE - 1   ;what is mean "-1"?sub one byte or...? Yes! it is one byte.
 times 60 dq 0   ;"dq":define quad-word(4 word/8 byte),create sixty empty descriptors
+
 SELECTOR_CODE equ (0x1 << 3) + TI_GDT + RPL0 ;Define the selector
 SELECTOR_DATA equ (0x2 << 3) + TI_GDT + RPL0
 SELECTOR_VIDEO equ (0x3 << 3) + TI_GDT + RPL0
 
+total_mem_bytes dd 0     ;store total memory bytes quantity.
+
 gdt_ptr  dw  GDT_LIMIT
             dd GDT_BASE   ;We define a pointer and this pointer's address store GDT_LIMIT+GDT_BASE,we can use lgdt commend to copy this address's data to GDTR,it named initial GDTR.
 
+ards_buf times 244 db 0 ;This buffer is used to store ARDS
+ards_nr dw 0
+
 loader_start:  ;running Function program
 ;------------------------GO to protect mode---------------------
+;ZERO:get total memory size.
 ;First:open the A20
 ;Second:load the GDT
 ;Third:make the PE of CR0 to "1".
 ;---------------------------------------------------------------------
-;First:open the A20
-in al,0x92 ;The port of A20Gate
-or al,0000_0010B   ;(B:binary)To make the first bit to 1 to open A20.
-out 0x92,al
-;Second:load the GDT
-lgdt [gdt_ptr]   ;Use lgdt instruction to initial GDTR,gdt_ptr:The parameter of GDTR's address point.GDTR:GDT register,it's 0~15 bit is GDT's boundary,16~47 bit is the GDT's base address in memory.
-;Third:make the PE of CR0 to "1".
-mov eax,cr0
-or eax,0x00000001
-mov cr0,eax
+	;ZERO: Get total memory size
+	xor ebx, ebx
+	mov edx, 0x534d4150  ;The ASCLL of string "SMAP"
+	mov di, ards_buf
+.e820_mem_get_loop:  ;get each ARDS descriptor construct circularly.
+	mov eax, 0x0000e820
+	mov ecx, 20  ;The size of ARDS
+	int 0x15
+	jc .e820_failed_so_try_e801  ;if cf is 1,so try 0xe801 sub-function
+	add di, cx
+	inc word [ards_nr]  ;record the quanaity of ARDS.
+	cmp ebx, 0  ;if ebx = 0 and cf isn't "1",it indicate ARDS all returned.
+	jnz .e820_mem_get_loop
 
-jmp dword SELECTOR_CODE:p_mode_start     ;[base address]:[offset value],refresh pipline + refresh "cache register of segement descripter",
+;find max[base_add_low + length_low] in all ARDS.
+	mov cx, [ards_nr] ;the number of circulate.
+	mov ebx, ards_buf
+	xor edx, edx
+.find_max_mem_area:
+	mov eax, [ebx] ;base_add_low
+	add eax, [ebx+8] ;length_low
+	add ebx, 20
+	cmp edx, eax
+	jge .next_ards ;Bubbling sroting, find max and the value in edx is always max memory size.
+	mov edx, eax  ;edx is total memory size.
+.next_ards:
+	loop .find_max_mem_area
+	jmp .mem_get_ok
+
+.e820_failed_so_try_e801:
+	mov ax, 0xe801
+	int 0x15
+	jc .e801_failed_so_try88
+
+	mov cx, 0x400
+	mul cx
+	shl edx, 16
+	and eax, 0x0000FFFF
+	or edx, eax
+	add edx, 0x100000
+	mov esi, edx
+
+	xor eax, eax
+	mov ax, bx
+	mov ecx, 0x10000
+	mul ecx
+	
+	add esi, eax
+	mov edx, esi
+	jmp .mem_get_ok
+
+.error_hlt:
+	jmp $
+	
+.e801_failed_so_try88:
+	mov ah, 0x88
+	int 0x15
+	jc .error_hlt
+	and eax, 0x0000FFFF
+
+	mov cx, 0x400
+	mul cx
+	shl edx, 16
+	or edx, eax
+	add edx, 0x100000
+
+.mem_get_ok:
+	mov [total_mem_bytes], edx  ;OK
+
+	;First:open the A20
+	in al,0x92 ;The port of A20Gate
+	or al,0000_0010B   ;(B:binary)To make the first bit to 1 to open A20.
+	out 0x92,al
+	;Second:load the GDT
+	lgdt [gdt_ptr]   ;Use lgdt instruction to initial GDTR,gdt_ptr:The parameter of GDTR's address point.GDTR:GDT register,it's 0~15 bit is GDT's boundary,16~47 bit is the GDT's base address in memory.
+	;Third:make the PE of CR0 to "1".
+	mov eax,cr0
+	or eax,0x00000001
+	mov cr0,eax
+
+	jmp dword SELECTOR_CODE:p_mode_start     ;[base address]:[offset value],refresh pipline + refresh "cache register of segement descripter",
 
 [bits 32]
 p_mode_start:
