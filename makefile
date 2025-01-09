@@ -28,10 +28,10 @@ $(BUILD_DIR)/debug.o : /home/yuxinghai/bochs/kernel/debug.c /home/yuxinghai/boch
 $(BUILD_DIR)/string.o : /home/yuxinghai/bochs/lib/string.c /home/yuxinghai/bochs/lib/string.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/lib/stdbool.h /home/yuxinghai/bochs/kernel/global.h /home/yuxinghai/bochs/kernel/debug.h
 	$(CC) $(CCFLAGS) $< -o $@
 
-$(BUILD_DIR)/bitmap.o : /home/yuxinghai/bochs/lib/kernel/bitmap.c /home/yuxinghai/bochs/lib/kernel/bitmap.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/kernel/interrupt.h /home/yuxinghai/bochs/kernel/debug.h /home/yuxinghai/bochs/kernel/global.h
+$(BUILD_DIR)/bitmap.o : /home/yuxinghai/bochs/lib/kernel/bitmap.c /home/yuxinghai/bochs/lib/kernel/bitmap.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/kernel/interrupt.h /home/yuxinghai/bochs/kernel/debug.h /home/yuxinghai/bochs/kernel/global.h /home/yuxinghai/bochs/lib/string.h
 	$(CC) $(CCFLAGS) $< -o $@
 
-$(BUILD_DIR)/memory.o : /home/yuxinghai/bochs/kernel/memory.c /home/yuxinghai/bochs/kernel/memory.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/lib/kernel/bitmap.h
+$(BUILD_DIR)/memory.o : /home/yuxinghai/bochs/kernel/memory.c /home/yuxinghai/bochs/kernel/memory.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/lib/kernel/bitmap.h /home/yuxinghai/bochs/kernel/debug.h /home/yuxinghai/bochs/lib/string.h
 	$(CC) $(CCFLAGS) $< -o $@
 
 ################################   The compile of assembly program    ##############################

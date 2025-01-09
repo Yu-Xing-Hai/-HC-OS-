@@ -1,6 +1,8 @@
 #include "memory.h"
 #include "stdint.h"
 #include "print.h"
+#include "debug.h"
+#include "string.h"
 
 #define PG_SIZE 4096  //4kB = 4 * 1024 = 4096 Byte
 /*
@@ -19,8 +21,130 @@ struct pool {   //used to manage physic memory.
     uint32_t pool_size;
 };
 
+#define PDE_IDX(addr) ((addr & 0xffc00000) >> 22)  //get high 10 bit of 32 address
+#define PTE_IDX(addr) ((addr & 0x003ff000) >> 22)  //get mid 10 bit of 32 address
+
 struct pool kernel_pool, user_pool; //manage physic
 struct virtual_addr kernel_vaddr;   //manage virtual
+
+/*applicate virtual page in pf(pool flag) by quantity of pg_cnt,if successful ,return the start address of virtual page,of fail,return NULL*/
+static void* vaddr_get(enum pool_flags pf, uint32_t pg_cnt) {
+    int vaddr_start = 0, bit_idx_start = -1;  //bit_idx is the index in bitmap.
+    uint32_t cnt = 0;
+    if(pf == PF_KERNEL) {
+        bit_idx_start = bitmap_scan(&kernel_vaddr.vaddr_bitmap, pg_cnt);  //pay attention: bitmap_scan()'s parameter is an bitmap structure's address,not an bitmap's address.
+        if(bit_idx_start == -1) {
+            return NULL;
+        }
+        while(cnt < pg_cnt) {
+            bitmap_set(&kernel_vaddr.vaddr_bitmap, bit_idx_start + cnt++, 1); //indicate these pages have be used.
+        }
+        vaddr_start = kernel_vaddr.vaddr_start + bit_idx_start * PG_SIZE;
+    }
+    else {
+        // User memory pool, we will add it when we do user processes.
+    }
+    return (void*)vaddr_start;
+}
+
+/*get the pte pointer of virtual address "vaddr"*/
+/*remember!! pointer's address is vritual address*/
+/*
+remember!! pte_ptr() and pde_ptr() don't care whether pte and pde exist, they just caculate virtual address of pte and pde which are related with vaddr
+******************************these two function are the key of edit page table.**************************
+*/
+uint32_t* pte_ptr(uint32_t vaddr) {
+    /*0xffc00000: this is virtual address, and it is point to last PDE, last PDE point to PDT's physic address*/
+    uint32_t* pte = (uint32_t*)(0xffc00000 + ((vaddr & 0xffc00000) >> 10) + PTE_IDX(vaddr) * 4);
+    return pte;
+}
+
+/*get the pde pointer of virtual address "vaddr"*/
+uint32_t* pde_ptr(uint32_t vaddr) {
+    uint32_t* pde = (uint32_t*)((0xfffff000) + PDE_IDX(vaddr) * 4);
+    return pde;
+}
+/******************************************************************************************* */
+
+/*destribute one physic page from physic memory pool which is pointed by m_pool*/
+/*if success, return physic address of page,if fail,return NULL.*/
+static void* palloc(struct pool* m_pool) {
+    int bit_idx = bitmap_scan(&m_pool->pool_bitmap, 1);
+    if(bit_idx == -1) {
+        return NULL;
+    }
+    bitmap_set(&m_pool->pool_bitmap, bit_idx, 1);
+    uint32_t page_phyaddr = ((bit_idx * PG_SIZE) + m_pool->phy_addr_start);
+    return (void*)page_phyaddr;
+}
+
+/*add mapping from _vaddr to _page_phyaddr in page table.*/
+static void page_table_add(void* _vaddr, void* _page_phyaddr) {
+    uint32_t vaddr = (uint32_t)_vaddr, page_phyaddr = (uint32_t)_page_phyaddr;
+    uint32_t* pde = pde_ptr(vaddr);
+    uint32_t* pte = pte_ptr(vaddr);
+
+/**************************************8pay attention!!*******************************/
+/*if we want execute *pte, we must make sure we have finished create pde,if we don's create pde and execute *pte, we will make page_fault*/
+    if(*pde & 0x00000001) {  //the attribute of "P",it indicate whether this pte exist.
+        ASSERT(!(*pte & 0x00000001));  //if we want create pte,so,it's "P" must 0.
+        if(!(*pte & 0x00000001)) {  //check more times to make sure safety.
+            *pte = (page_phyaddr | PG_US_U | PG_RW_W | PG_P_1);  //structure of pte.
+        }
+        else {
+            PANIC("pte repeat");
+            *pte = (page_phyaddr | PG_US_U | PG_RW_W | PG_P_1);
+        }
+    }
+    else { //the page space of PT all be dectributed from kernel space.
+        uint32_t pde_phyaddr = (uint32_t)palloc(&kernel_pool);  //apply for a page space from kernel pool to create PT.
+        *pde = (pde_phyaddr | PG_US_U | PG_RW_W | PG_P_1);
+        memset((void*)((int)pte & 0xfffff000), 0, PG_SIZE);   //clean the page space of pde_phyaddr
+
+        ASSERT(!(*pte & 0x00000001));
+        *pte = (page_phyaddr | PG_US_U | PG_RW_W | PG_P_1);
+    }
+}
+
+/*destribute page space and the quantities are pg_cnt.If success,return start virtual address,else return NULL.*/
+void* malloc_page(enum pool_flags pf, uint32_t pg_cnt) {
+    ASSERT(pg_cnt > 0 && pg_cnt < 3840);  //3840： kernel or user pyhsic space have about 16MB,we use 15MB to limit. pg_cnt < 15 * 1024 * 1024 / 4096(PG_SIZE) = 3840 (page)
+/*************************the principle of malloc_page()***************************/
+/*      First: use vaddr_get() to apply vaitual address from virtual memory pool.
+        Second: use palloc() to apply physic page from physic memory pool.
+        Thired: use page_table_add() to finish mapping from virtual address to physic address in PT.
+*/
+    void* vaddr_start = vaddr_get(pf, pg_cnt);
+    if(vaddr_start == NULL) {
+        return NULL;
+    }
+
+    uint32_t vaddr = (uint32_t)vaddr_start, cnt = pg_cnt;
+    struct pool* mem_pool = pf & PF_KERNEL ? &kernel_pool : &user_pool;  //make sure to use which type of pool to destribute physic page.
+
+    /*virtual address is continuous,but physic address could not be continuous,so we divide these three function from one cycle,
+    and we can apply more virtual page onetime instead of applying virtual page one by one,
+    if we failed to apply virtual page,we can decrease steps to apply physic page.*/
+    while(cnt-- > 0) {
+        void* page_phyaddr = palloc(mem_pool);
+        if(page_phyaddr == NULL) {
+            //if failed, we must rollback all address(virtual/physic page) which are applied, we will achieve it in the future.
+            return NULL;
+        }
+        page_table_add((void*)vaddr, page_phyaddr);  //make mapping in PT.
+        vaddr += PG_SIZE;    //next virtual page.
+    }
+    return vaddr_start;
+}
+
+/*apply one page memory from pyhsic kernel memory pool, if success, return virtual address,else,return NULL.*/
+void* get_kernel_pages(uint32_t pg_cnt) {
+    void* vaddr = malloc_page(PF_KERNEL, pg_cnt);
+    if(vaddr != NULL) {
+        memset(vaddr, 0, pg_cnt * PG_SIZE);  //clean this memory space which you have applied.
+    }
+    return vaddr;
+}
 
 /*initialize memory pool and ralated structures*/
 static void mem_pool_init(uint32_t all_mem) {

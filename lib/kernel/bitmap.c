@@ -4,6 +4,7 @@
 #include "print.h"
 #include "interrupt.h"
 #include "debug.h"
+#include "string.h"
 
 void bitmap_init(struct bitmap* btmp) {
     memset(btmp->bits, 0, btmp->btmp_bytes_len);
