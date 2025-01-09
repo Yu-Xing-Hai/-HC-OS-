@@ -1,4 +1,5 @@
 #include "string.h"
+#include "stdint.h"
 #include "global.h"
 #include "debug.h"
 
@@ -20,7 +21,7 @@ void memcpy(void* dst_, const void* src_, uint32_t size) {
 int memcmp(const void* a_, const void* b_, uint32_t size) {
     const char* a = a_;
     const char* b = b_;
-    ASSERT(a != NULL && B != NULL);
+    ASSERT(a != NULL && b != NULL);
     while(size-- > 0) {
         if(*a != *b) {
             return *a > *b ? 1 : -1;
@@ -32,7 +33,7 @@ int memcmp(const void* a_, const void* b_, uint32_t size) {
 }
 
 char* strcpy(char* dst_, const char* src_) {
-    ASSERT(dst_ != NULL && src != NULL);
+    ASSERT(dst_ != NULL && src_ != NULL);
     char* r = dst_;  //aim to return the destination string's start address.
     while((*dst_++ = *src_++));  //this function is same to memcpy,but this function use the flag of '0' which is the end of string.
     return r;
@@ -80,7 +81,7 @@ char* strrchr(const char* str, const uint8_t ch) {
 }
 
 /*splice src_ behind dst_,return new string's address*/
-char* strcat(cahr* dst_, const char* src_) {
+char* strcat(char* dst_, const char* src_) {
     ASSERT(dst_ != NULL && src_ != NULL);
     char* str = dst_;
     while(*str++); //when str point to '0',break.

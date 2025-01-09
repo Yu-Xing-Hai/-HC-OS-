@@ -1,6 +1,6 @@
 #include "bitmap.h"
 #include "stdint.h"
-#include "string.h"
+#include "stdbool.h"
 #include "print.h"
 #include "interrupt.h"
 #include "debug.h"
@@ -20,7 +20,7 @@ bool bitmap_scan_test(struct bitmap* btmp, uint32_t bit_idx) {  //pay attention 
 /*used to find empty bit's address in bitmap,and desire to find the empty bit's quantities is cnt */
 int bitmap_scan(struct bitmap* btmp, uint32_t cnt) {
     uint32_t idx_byte = 0; //used to record the byte where empty bit is in. 
-    while((0ff == btmp->bits[idx_byte]) && (idx_byte < btmp->btmp_bytes_len)) {
+    while((0xff == btmp->bits[idx_byte]) && (idx_byte < btmp->btmp_bytes_len)) {
         idx_byte++;
     }
     ASSERT(idx_byte < btmp->btmp_bytes_len);
