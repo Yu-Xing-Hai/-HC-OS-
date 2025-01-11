@@ -4,6 +4,7 @@
 #include "print.h"
 #include "interrupt.h"
 #include "debug.h"
+#include "string.h"
 
 void bitmap_init(struct bitmap* btmp) {
     memset(btmp->bits, 0, btmp->btmp_bytes_len);
@@ -63,9 +64,9 @@ void bitmap_set(struct bitmap* btmp, uint32_t bit_idx, uint8_t value) {
     uint32_t bit_odd = bit_idx % 8;
 
     if(value) {
-        btmp->bits[byte_idx] != (uint8_t)(BITMAP_MASK << bit_odd);
+        btmp->bits[byte_idx] |= (BITMAP_MASK << bit_odd);
     }
     else {
-        btmp->bits[byte_idx] &= ~(uint8_t)(BITMAP_MASK << bit_odd);
+        btmp->bits[byte_idx] &= ~(BITMAP_MASK << bit_odd);
     }
 }
