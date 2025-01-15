@@ -3,10 +3,12 @@
 #include "interrupt.h"
 #include "timer.h"
 #include "memory.h"
+#include "thread.h"
 
 void init_all() {
    put_str("init_all\n");
-   idt_init();
-   timer_init();
+   idt_init(); //now, IF bit is 0, we must use "sti" to receive clock interrupt.
+   timer_init();  //change clock frequency
    mem_init();
+   thread_init();
 }

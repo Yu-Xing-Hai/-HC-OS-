@@ -7,22 +7,22 @@ LIB = -I /home/yuxinghai/bochs/lib/ -I /home/yuxinghai/bochs/lib/kernel/ -I /hom
 ASFLAGS = -f elf
 CCFLAGS = -m32 -Wall $(LIB) -c -fno-builtin -W -Wstrict-prototypes -Wmissing-prototypes
 LDFLAGS = -m elf_i386 -Ttext $(ENTRY_POINT) -e main -Map $(BUILD_DIR)/kernel.map
-OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o $(BUILD_DIR)/timer.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/print.o $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o $(BUILD_DIR)/bitmap.o $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o
+OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o $(BUILD_DIR)/timer.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/print.o $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o $(BUILD_DIR)/bitmap.o $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o $(BUILD_DIR)/list.o $(BUILD_DIR)/switch.o
 
 #################################       The compile of C program    ##############################
-$(BUILD_DIR)/main.o : /home/yuxinghai/bochs/kernel/main.c /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/kernel/init.h /home/yuxinghai/bochs/thread/thread.h
+$(BUILD_DIR)/main.o : /home/yuxinghai/bochs/kernel/main.c /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/kernel/init.h /home/yuxinghai/bochs/thread/thread.h /home/yuxinghai/bochs/kernel/interrupt.h
 	$(CC) $(CCFLAGS) $< -o $@
 
-$(BUILD_DIR)/init.o : /home/yuxinghai/bochs/kernel/init.c /home/yuxinghai/bochs/kernel/init.h /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/kernel/interrupt.h /home/yuxinghai/bochs/device/timer.h /home/yuxinghai/bochs/kernel/memory.h
+$(BUILD_DIR)/init.o : /home/yuxinghai/bochs/kernel/init.c /home/yuxinghai/bochs/kernel/init.h /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/kernel/interrupt.h /home/yuxinghai/bochs/device/timer.h /home/yuxinghai/bochs/kernel/memory.h /home/yuxinghai/bochs/thread/thread.h
 	$(CC) $(CCFLAGS) $< -o $@
 
 $(BUILD_DIR)/interrupt.o : /home/yuxinghai/bochs/kernel/interrupt.c /home/yuxinghai/bochs/kernel/interrupt.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/kernel/global.h /home/yuxinghai/bochs/lib/kernel/io.h /home/yuxinghai/bochs/lib/kernel/print.h
 	$(CC) $(CCFLAGS) $< -o $@
 
-$(BUILD_DIR)/timer.o : /home/yuxinghai/bochs/device/timer.c /home/yuxinghai/bochs/device/timer.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/lib/kernel/io.h /home/yuxinghai/bochs/lib/kernel/print.h
+$(BUILD_DIR)/timer.o : /home/yuxinghai/bochs/device/timer.c /home/yuxinghai/bochs/device/timer.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/lib/kernel/io.h /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/kernel/interrupt.h /home/yuxinghai/bochs/thread/thread.h /home/yuxinghai/bochs/kernel/debug.h
 	$(CC) $(CCFLAGS) $< -o $@
 
-$(BUILD_DIR)/debug.o : /home/yuxinghai/bochs/kernel/debug.c /home/yuxinghai/bochs/kernel/debug.h /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/kernel/interrupt.h
+$(BUILD_DIR)/debug.o : /home/yuxinghai/bochs/kernel/debug.c /home/yuxinghai/bochs/kernel/debug.h /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/kernel/interrupt.h
 	$(CC) $(CCFLAGS) $< -o $@
 
 $(BUILD_DIR)/string.o : /home/yuxinghai/bochs/lib/string.c /home/yuxinghai/bochs/lib/string.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/lib/stdbool.h /home/yuxinghai/bochs/kernel/global.h /home/yuxinghai/bochs/kernel/debug.h
@@ -34,14 +34,18 @@ $(BUILD_DIR)/bitmap.o : /home/yuxinghai/bochs/lib/kernel/bitmap.c /home/yuxingha
 $(BUILD_DIR)/memory.o : /home/yuxinghai/bochs/kernel/memory.c /home/yuxinghai/bochs/kernel/memory.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/lib/kernel/bitmap.h /home/yuxinghai/bochs/kernel/debug.h /home/yuxinghai/bochs/lib/string.h /home/yuxinghai/bochs/lib/kernel/bitmap.h
 	$(CC) $(CCFLAGS) $< -o $@
 
-$(BUILD_DIR)/thread.o : /home/yuxinghai/bochs/thread/thread.c /home/yuxinghai/bochs/thread/thread.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/lib/string.h /home/yuxinghai/bochs/kernel/global.h /home/yuxinghai/bochs/kernel/memory.h
+$(BUILD_DIR)/thread.o : /home/yuxinghai/bochs/thread/thread.c /home/yuxinghai/bochs/thread/thread.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/lib/string.h /home/yuxinghai/bochs/kernel/global.h /home/yuxinghai/bochs/kernel/memory.h /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/kernel/debug.h
+	$(CC) $(CCFLAGS) $< -o $@
+
+$(BUILD_DIR)/list.o : /home/yuxinghai/bochs/kernel/list.c /home/yuxinghai/bochs/kernel/list.h /home/yuxinghai/bochs/kernel/interrupt.h /home/yuxinghai/bochs/lib/stdbool.h /home/yuxinghai/bochs/lib/stdint.h
 	$(CC) $(CCFLAGS) $< -o $@
 ################################   The compile of assembly program    ##############################
 $(BUILD_DIR)/kernel.o : /home/yuxinghai/bochs/kernel/kernel.S
 	$(AS) $(ASFLAGS) $< -o $@
 $(BUILD_DIR)/print.o : /home/yuxinghai/bochs/lib/kernel/print.S
 	$(AS) $(ASFLAGS) $< -o $@
-
+$(BUILD_DIR)/switch.o : /home/yuxinghai/bochs/thread/switch.S
+	$(AS) $(ASFLAGS) $< -o $@
 ######  link all object document  #########
 $(BUILD_DIR)/kernel.bin : $(OBJS)
 	$(LD) $(LDFLAGS) $^ -o $@
