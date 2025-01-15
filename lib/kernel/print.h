@@ -4,4 +4,5 @@
 void put_char(uint8_t char_asci);
 void put_str(char* message);
 void put_int(uint32_t num);  //print by Hex
+void set_cursor(uint8_t value);  //set cursor
 #endif

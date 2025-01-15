@@ -3,10 +3,34 @@
 #include "string.h"
 #include "global.h"
 #include "memory.h"
+#include "list.h"
+#include "interrupt.h"
+#include "print.h"
+#include "debug.h"
 
 #define PG_SIZE 4096
 
+struct task_struct* main_thread;  //main thread's PCB
+struct list thread_ready_list;  //the list of ready, ready queue.
+struct list thread_all_list;   //the list of all task,it is a list include all thread we have created.
+/*we use PCB to manage thread, so we need to translate thread's tag to thread's PCB.*/
+static struct list_elem* thread_tag;  //Be used to store thread's tag when we want to translate. 
+
+extern void switch_to(struct task_struct* cur, struct task_struct* next);
+
+/*get the PCB pointer of current thread*/
+struct task_struct* running_thread() {
+    uint32_t esp;
+    asm ("mov %%esp, %0" : "=g"(esp));
+    /*get the start address of PCB*/
+    return (struct task_struct*)(esp & 0xfffff000);
+}
+
 static void kernel_thread(thread_func* function, void* func_arg) {
+    /*after enter interrupt, CPU will close interrupt automatically,
+    but our task's schedule is based on clock interrupt,so we need enable interrupt.
+    */
+    intr_enable();  //set IF bit to 1,CPU begin to receive clock interrupt.
     function(func_arg);
 }
 
@@ -26,21 +50,82 @@ void thread_create(struct task_struct* pthread,thread_func function, void* func_
 /*initialize the base information of thread.
 you can say initialize PCB*/
 void init_thread(struct task_struct* pthread, char* name, int prio) {
-    memset(pthread, 0, sizeof(*pthread));
-    strcpy(pthread->name, name);
-    pthread->status = TASK_RUNNING;
-    pthread->priority = prio;
+    memset(pthread, 0, sizeof(*pthread));  //the value of sizeof(*pthread) is just a structure's size of task_struct instead of a page's size, so don't warry about return address.
 
     pthread->self_kstack = (uint32_t*)((uint32_t)pthread + PG_SIZE);
+    if(pthread == main_thread) {
+        pthread->status = TASK_RUNNING;
+    }
+    else {
+        pthread->status = TASK_READY;
+    }
+    strcpy(pthread->name, name);
+    pthread->priority = prio;
+    pthread->ticks = prio;
+    pthread->elapsed_ticks = 0;
+    pthread->pgdir = NULL;
     pthread->stack_magic = 0x12345678;
 }
 
-/*create an thread which priority is prio,name is name.*/
+/*The entry of creating thread: create an thread which priority is prio,name is name.*/
 struct task_struct* thread_start(char* name, int prio, thread_func function, void* func_arg) {
     struct task_struct* thread = get_kernel_pages(1);  //use one page to create an PCB
     init_thread(thread, name, prio); //initialize PCB by base information
     thread_create(thread, function, func_arg); //initialize thread_stack in PCB
 
-    asm volatile ("movl %0, %%esp; pop %%ebp; pop %%ebx; pop %%edi; pop %%esi; ret": : "g"(thread->self_kstack) : "memory"); //self_kstack is pointed to the TOP of PCB(also is botton of intr_stack.)
+/*Pay attention: we use general_tag to represent PCB in thread_ready_list*/
+    ASSERT(!elem_find(&thread_ready_list, &thread->general_tag));
+    list_append(&thread_ready_list, &thread->general_tag);
+    ASSERT(!elem_find(&thread_all_list, &thread->all_list_tag));
+    list_append(&thread_all_list, &thread->all_list_tag);
+
     return thread;
+}
+
+/*give main()(is main thread^^) an identity card(yes, is PCB)*/
+static void make_main_thread(void) {
+    /*when we enter kernel, we make esp to 0xc009f000,
+    it point to the botton of stack in PCB which is used by main_thread, 
+    actually, we have already reserved main_thread's PCB in 0xc009e000, 
+    so, we don't need to use get_kernel_page() function to create PCB.*/
+    main_thread = running_thread();
+    init_thread(main_thread, "main", 31);
+
+    /*this thread is already running, so we don't need to put it to thread_ready_list.*/
+    ASSERT(!elem_find(&thread_all_list, &main_thread->all_list_tag));
+    list_append(&thread_all_list, &main_thread->all_list_tag);
+}
+
+void schedule() {
+    //done current thread
+    ASSERT(intr_get_status() == INTR_OFF);
+
+    struct task_struct* cur = running_thread();
+    if(cur->status == TASK_RUNNING) {
+        ASSERT(!elem_find(&thread_ready_list, &cur->general_tag));
+        list_append(&thread_ready_list, &cur->general_tag);
+        cur->ticks = cur->priority;
+        cur->status = TASK_READY;
+    }
+    else {
+        //temporary empty
+    }
+    //change new thread which is the first element in thread_ready_list.
+    ASSERT(!list_empty(&thread_ready_list));
+    thread_tag = NULL;
+    thread_tag = list_pop(&thread_ready_list);
+    struct task_struct* next = elem2entry(struct task_struct, general_tag, thread_tag); //general_tag is the name of member.
+    next->status = TASK_RUNNING;
+    switch_to(cur, next);
+}
+
+/*initial the environment of thread*/
+void thread_init(void) {
+    put_str("thread_init start\n");
+    list_init(&thread_ready_list);
+    list_init(&thread_all_list);
+
+/*create current main() function to main thread.*/
+    make_main_thread();
+    put_str("thread_init done\n");
 }

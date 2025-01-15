@@ -20,7 +20,7 @@ intr%1entry:        ;intr + %1 + entry to create this name.
    push gs
    pushad
    
-   mov al, 0x20   ;the commend of "EOI(end of interrupt)"
+   mov al, 0x20   ;the commend of "EOI(end of interrupt)",however, when enter interrupt handler,the IF bit is set 0, CPU don's receive clock interrupt.
    out 0xa0, al
    out 0x20, al
 
