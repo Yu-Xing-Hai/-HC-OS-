@@ -76,6 +76,7 @@ struct task_struct* thread_start(char* name, int prio, thread_func function, voi
 /*Pay attention: we use general_tag to represent PCB in thread_ready_list*/
     ASSERT(!elem_find(&thread_ready_list, &thread->general_tag));
     list_append(&thread_ready_list, &thread->general_tag);
+    ASSERT(elem_find(&thread_ready_list, &thread->general_tag)); //locate the mistake
     ASSERT(!elem_find(&thread_all_list, &thread->all_list_tag));
     list_append(&thread_all_list, &thread->all_list_tag);
 

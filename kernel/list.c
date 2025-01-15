@@ -26,7 +26,7 @@ void list_push(struct list* plist, struct list_elem* elem) {
 }
 
 void list_append(struct list* plist, struct list_elem* elem) {
-    list_insert_before(plist->tail.prev, elem);
+    list_insert_before(&plist->tail, elem);
 }
 
 void list_remove(struct list_elem* pelem) {
