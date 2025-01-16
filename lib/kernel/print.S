@@ -205,7 +205,7 @@ set_cursor:
     push ebx
     push edx
 
-    mov ebx, [esp + 20]
+    mov ebx, [esp + 16]
 
     mov dx, 0x03d4
     mov al, 0x0e
