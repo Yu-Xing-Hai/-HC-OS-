@@ -34,11 +34,25 @@ static void general_intr_handler(uint8_t vec_nr) {
    if(vec_nr == 0x27 || vec_nr == 0x2f) {
       return;
    }
-   put_str("int vector : 0x");
-   put_int(vec_nr);
-   put_char(' ');
+   
+   set_cursor(0);
+   int cursor_pos = 0;
+   while(cursor_pos < 320) {
+      put_str(" ");
+      cursor_pos++;
+   }
+   set_cursor(0);
+   put_str("!!!!!!    exception message begin    !!!!!\n");
+   set_cursor(88);
    put_str(intr_name[vec_nr]);
-   put_char('\n');
+   if(vec_nr == 14) { //Page-Fault
+      int page_fault_vaddr = 0;
+      asm ("movl %%cr2, %0" : "=r"(page_fault_vaddr));
+      put_str("\npage fault addr is ");
+      put_int(page_fault_vaddr);
+   }
+   put_str("\n!!!!!   exception message end !!!!!!\n");
+   while(1);
 }
 
 /*Create interrupt gate descriptor*/
@@ -102,7 +116,7 @@ static void pic_init(void) {
    outb(PIC_S_DATA, 0x02);
    outb(PIC_S_DATA, 0x01);
 
-   //only open IR0(the interrupt of click)
+   //only release IR0(the interrupt of clock), now, IF bit is 0, we must use "sti" to receive clock interrupt.
    outb(PIC_M_DATA, 0xfe);
    outb(PIC_S_DATA, 0xff);
 
@@ -143,6 +157,11 @@ enum intr_status intr_disable() {
 
 enum intr_status intr_set_status(enum intr_status status) {
    return status & INTR_ON ? intr_enable() : intr_disable();
+}
+
+/*register interrupt handler in interrupt handler array.*/
+void register_handler(uint8_t vector_no, intr_handler function) {
+   idt_table[vector_no] = function;
 }
 
 /*Finish all initial work about interrupt*/
