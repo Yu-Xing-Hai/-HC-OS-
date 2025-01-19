@@ -20,7 +20,7 @@ void lock_init(struct lock* plock) {
 /*"down" opention of semaphore*/
 void sema_down(struct semaphore* psema) {
     enum intr_status old_status = intr_disable();
-    if(psema->value == 0) {  //the lock has not be released
+    while(psema->value == 0) {  //the lock has not be released
         ASSERT(!elem_find(&psema->waiters, &running_thread()->general_tag));
         if(elem_find(&psema->waiters, &running_thread()->general_tag)) {
             PANIC("sema_down: thread blocked has been in waiters_list\n");
