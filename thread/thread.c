@@ -98,7 +98,7 @@ static void make_main_thread(void) {
 }
 
 void schedule() {
-    //done current thread
+    //replace current thread
     ASSERT(intr_get_status() == INTR_OFF);
 
     struct task_struct* cur = running_thread();
@@ -118,6 +118,30 @@ void schedule() {
     struct task_struct* next = elem2entry(struct task_struct, general_tag, thread_tag); //general_tag is the name of member.
     next->status = TASK_RUNNING;
     switch_to(cur, next);
+}
+
+void thread_block(enum task_status stat) {
+    ASSERT(((stat == TASK_BLOCKED) || (stat == TASK_WAITING) || (stat == TASK_HANGING)));
+    enum intr_status old_status = intr_disable();
+    struct task_struct* cur_thread = running_thread();
+    cur_thread->status = stat;  //change current thread's status.
+    schedule();  //replace current thread from CPU.
+
+    intr_set_status(old_status);
+}
+
+void thread_unblock(struct task_struct* pthread) {
+    enum intr_status old_status = intr_disable();
+    ASSERT(((pthread->status == TASK_BLOCKED) || (pthread->status== TASK_WAITING) || (pthread->status == TASK_HANGING)));
+    if(pthread->status != TASK_READY) {
+        ASSERT(!elem_find(&thread_ready_list, &pthread->general_tag));
+        if(elem_find(&thread_ready_list, &pthread->general_tag)) {
+            PANIC("thread_unblock: blocked thread in ready_list\n");
+        }
+        list_push(&thread_ready_list, &pthread->general_tag);  //pay attention: we use "list_push" to make this thread get quickly schedule.
+        pthread->status = TASK_READY;
+    }
+    intr_set_status(old_status);
 }
 
 /*initial the environment of thread*/
