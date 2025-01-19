@@ -90,7 +90,7 @@ static void make_main_thread(void) {
     actually, we have already reserved main_thread's PCB in 0xc009e000, 
     so, we don't need to use get_kernel_page() function to create PCB.*/
     main_thread = running_thread();
-    init_thread(main_thread, "main", 31);
+    init_thread(main_thread, "main", 2);
 
     /*this thread is already running, so we don't need to put it to thread_ready_list.*/
     ASSERT(!elem_find(&thread_all_list, &main_thread->all_list_tag));
