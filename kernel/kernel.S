@@ -79,4 +79,19 @@ VECTOR 0x1d,ZERO
 VECTOR 0x1e,ERROR_CODE
 VECTOR 0x1f,ZERO
 
-VECTOR 0x20,ZERO   ;this vector of interrupt can be defined by user and above all are used by CPU dafault.
+VECTOR 0x20,ZERO   ;clock interrupt
+VECTOR 0x21,ZERO   ;keyboard interrupt
+VECTOR 0x22,ZERO   ;be used to link master and sliver
+VECTOR 0x23,ZERO   ;Serial of 2
+VECTOR 0x24,ZERO   ;Serial of 1
+VECTOR 0x25,ZERO   ;Parallel port of 2
+VECTOR 0x26,ZERO   ;diskette
+VECTOR 0x27,ZERO   ;Parallel port of 1
+VECTOR 0x28,ZERO   ;real time clock
+VECTOR 0x29,ZERO   ;redirect
+VECTOR 0x2a,ZERO   ;retain
+VECTOR 0x2b,ZERO   ;retain
+VECTOR 0x2c,ZERO   ;mouse of ps/2
+VECTOR 0x2d,ZERO   ;the error of fpu float unit
+VECTOR 0x2e,ZERO   ;disk
+VECTOR 0x2f,ZERO   ;retain
