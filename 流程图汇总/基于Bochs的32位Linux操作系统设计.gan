@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><project name="基于Bochs的32位Linux操作系统设计" company="" webLink="http://" view-date="2024-12-29" view-index="0" gantt-divider-location="493" resource-divider-location="300" version="3.3.3312" locale="zh_CN">
+    <description/>
+    <view zooming-state="default:5" id="gantt-chart">
+        <field id="tpd3" name="名称" width="297" order="0"/>
+        <field id="tpd4" name="开始日期" width="90" order="1"/>
+        <field id="tpd5" name="结束日期" width="105" order="2"/>
+        <field id="tpd15" name="备注" width="20" order="3"/>
+        <option id="filter.completedTasks" value="false"/>
+        <option id="filter.dueTodayTasks" value="false"/>
+        <option id="filter.overdueTasks" value="false"/>
+        <option id="filter.inProgressTodayTasks" value="false"/>
+        <option id="color.recent"><![CDATA[#0066cc #ff99cc #ffcc99 #ff9999 #ffff33 #ffff66 #00cccc #00ff99 #00ff00]]></option>
+    </view>
+    <view id="resource-table">
+        <field id="0" name="名称" width="210" order="0"/>
+        <field id="1" name="默认角色" width="86" order="1"/>
+    </view>
+    <!-- -->
+    <calendars>
+        <day-types>
+            <day-type id="0"/>
+            <day-type id="1"/>
+            <default-week id="1" name="default" sun="0" mon="0" tue="0" wed="0" thu="0" fri="0" sat="0"/>
+            <only-show-weekends value="false"/>
+            <overriden-day-types/>
+            <days/>
+        </day-types>
+    </calendars>
+    <tasks empty-milestones="true">
+        <taskproperties>
+            <taskproperty id="tpd0" name="type" type="default" valuetype="icon"/>
+            <taskproperty id="tpd1" name="priority" type="default" valuetype="icon"/>
+            <taskproperty id="tpd2" name="info" type="default" valuetype="icon"/>
+            <taskproperty id="tpd3" name="name" type="default" valuetype="text"/>
+            <taskproperty id="tpd4" name="begindate" type="default" valuetype="date"/>
+            <taskproperty id="tpd5" name="enddate" type="default" valuetype="date"/>
+            <taskproperty id="tpd6" name="duration" type="default" valuetype="int"/>
+            <taskproperty id="tpd7" name="completion" type="default" valuetype="int"/>
+            <taskproperty id="tpd8" name="coordinator" type="default" valuetype="text"/>
+            <taskproperty id="tpd9" name="predecessorsr" type="default" valuetype="text"/>
+        </taskproperties>
+        <task id="1" uid="04b6b8756b6b4e5eb218a49d3bc466cc" name="Linux环境配置及Bochs的安装" color="#00ff00" meeting="false" start="2024-10-01" duration="20" complete="0" expand="true">
+            <depend id="2" type="2" difference="0" hardness="Strong"/>
+            <depend id="3" type="2" difference="0" hardness="Strong"/>
+            <depend id="4" type="2" difference="0" hardness="Strong"/>
+            <depend id="5" type="2" difference="0" hardness="Strong"/>
+            <depend id="6" type="2" difference="0" hardness="Strong"/>
+            <depend id="7" type="2" difference="0" hardness="Strong"/>
+            <depend id="10" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="2" uid="e1b12c4a92eb45af8394b79834fd889b" name="编写MBR并使用BIOS加载到内存" color="#00ff99" meeting="false" start="2024-10-21" duration="24" complete="0" expand="true">
+            <depend id="3" type="2" difference="0" hardness="Strong"/>
+            <depend id="5" type="2" difference="0" hardness="Strong"/>
+            <depend id="7" type="2" difference="0" hardness="Strong"/>
+            <depend id="10" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="3" uid="d4e84e09780a4485b4c1bd3415c06607" name="编写Loader中的分页机制" color="#00cccc" meeting="false" start="2024-11-14" duration="21" complete="0" expand="true">
+            <depend id="4" type="2" difference="0" hardness="Strong"/>
+            <depend id="5" type="2" difference="0" hardness="Strong"/>
+            <depend id="6" type="2" difference="0" hardness="Strong"/>
+            <depend id="7" type="2" difference="0" hardness="Strong"/>
+            <depend id="10" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="4" uid="8b25d45d3dee4719bd9d4c8fa17c5824" name="编写Loader实现实模式到保护模式" color="#ffff33" meeting="true" start="2024-12-05" duration="0" complete="0" expand="true">
+            <depend id="5" type="2" difference="0" hardness="Strong"/>
+            <depend id="6" type="2" difference="0" hardness="Strong"/>
+            <depend id="7" type="2" difference="0" hardness="Strong"/>
+            <depend id="10" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="5" uid="7347559692184f968c69675cabfc8469" name="编写操作系统内核——中断控制" color="#ff9999" meeting="false" start="2024-12-05" duration="30" complete="0" expand="true">
+            <depend id="6" type="2" difference="0" hardness="Strong"/>
+            <depend id="7" type="2" difference="0" hardness="Strong"/>
+            <depend id="10" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="6" uid="3f6adf4fabfe49a8be38dc34ff0d9fe6" name="编写操作系统内核——内存管理系统" color="#ffcc99" meeting="false" start="2025-01-04" duration="7" complete="0" expand="true">
+            <depend id="7" type="2" difference="0" hardness="Strong"/>
+            <depend id="10" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="7" uid="6931fb29f93c417781a7f10ac7173c53" name="编写操作系统内核——线程实现" color="#ff99cc" meeting="false" start="2025-01-11" duration="5" complete="0" expand="true">
+            <depend id="10" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="10" uid="6288515ca3f943f1b1aa13931ffb3f7c" name="编写操作系统内核——输入输出系统实现" color="#0066cc" meeting="false" start="2025-01-16" duration="5" complete="0" expand="true">
+            <depend id="11" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="11" uid="b4c4a6a8de084494bd91e147e993e753" name="编写操作系统内核——用户进程实现" meeting="false" start="2025-01-21" duration="10" complete="0" expand="true">
+            <depend id="12" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="12" uid="0dc4f08da7fb40a8b3d889b94d649f9e" name="编写操作系统内核——硬盘驱动程序编写" meeting="false" start="2025-01-31" duration="5" complete="0" expand="true">
+            <depend id="13" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="13" uid="539a2daaff8e47d5ac190276389b2464" name="编写操作系统内核——文件系统实现" meeting="false" start="2025-02-05" duration="10" complete="0" expand="true">
+            <depend id="14" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="14" uid="4651b245c1d14b119c393b1f11383dfb" name="编写操作系统内核——系统交互实现" meeting="false" start="2025-02-15" duration="5" complete="0" expand="true"/>
+    </tasks>
+    <resources>
+        <resource id="1" name="《操作系统真相还原》" function="Default:1" contacts="" phone="">
+            <rate name="standard" value="100"/>
+        </resource>
+    </resources>
+    <allocations/>
+    <vacations/>
+    <previous/>
+    <roles roleset-name="Default"/>
+</project>

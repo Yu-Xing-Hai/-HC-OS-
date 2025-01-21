@@ -11,13 +11,13 @@ int main(void) {
 	put_str("I am kernel\n");
 	init_all();
    	
-	thread_start("k_thread_a", 2, k_thread_a, "argA ");
-	thread_start("k_thread_b", 2, k_thread_b, "argB ");
+	//thread_start("k_thread_a", 2, k_thread_a, "argA ");
+	//thread_start("k_thread_b", 2, k_thread_b, "argB ");
 	
 	intr_enable(); //Let CPU receive clock interrupt by set IF bit to 1.
-	while(1) {
-		console_put_str("Main ");
-	};
+	while(1);// {
+		//console_put_str("Main ");
+	//};
 	return 0;
 }
 
