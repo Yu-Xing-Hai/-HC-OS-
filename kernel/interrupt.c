@@ -4,7 +4,7 @@
 #include "io.h"
 #include "print.h"
 
-#define IDT_DESC_CNT 0x21  //the quantity of interrupt which we support at this time.
+#define IDT_DESC_CNT 0x30  //the quantity of interrupt which we support at this time.
 #define PIC_M_CTRL 0X20
 #define PIC_M_DATA 0x21
 #define PIC_S_CTRL 0xa0
@@ -124,9 +124,9 @@ static void pic_init(void) {
    outb(PIC_S_DATA, 0x02);
    outb(PIC_S_DATA, 0x01);
 
-   //only release IR0(the interrupt of clock), now, IF bit is 0, we must use "sti" to receive clock interrupt.
-   outb(PIC_M_DATA, 0xfe);
-   outb(PIC_S_DATA, 0xff);
+   //only release IR1(the interrupt of keyboard), now, IF bit is 0, we must use "sti" to receive clock interrupt.
+   outb(PIC_M_DATA, 0xfd);
+   outb(PIC_S_DATA, 0xff);  //shield slave piece
 
    put_str("pic_init done\n");
 }

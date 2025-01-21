@@ -1,0 +1,80 @@
+<mxfile host="65bd71144e">
+    <diagram id="-cLGOm30IwgOMd6xaeZB" name="Page-1">
+        <mxGraphModel dx="2378" dy="914" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="32" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2" target="24" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="-75" y="315"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="2" value="&lt;div style=&quot;&quot;&gt;【interrupt.c】&lt;/div&gt;&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;void idt_init() {&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#9;&lt;/span&gt;exception_init();&lt;br&gt;&lt;/span&gt;&lt;/div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#9;&lt;/span&gt;idt_desc_init();&lt;br&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#9;&lt;/span&gt;pic_init();&lt;br&gt;&lt;br&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#9;&lt;/span&gt;lidt 48位操作数;&lt;br&gt;}" style="rounded=1;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="-365" y="250" width="160" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="4" target="7" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="&lt;div style=&quot;&quot;&gt;【interrupt.c】&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;br&gt;&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;void idt_desc_init() {&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;span style=&quot;&quot;&gt;&#9;&lt;/span&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#9;&lt;/span&gt;for(int i = 0; i &amp;lt; IDT_DESC_CNT; i++) {&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;span style=&quot;&quot;&gt;&#9;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;&#9;&lt;/span&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#9;&lt;span style=&quot;white-space: pre;&quot;&gt;&#9;&lt;/span&gt;&lt;/span&gt;make_idt_desc(&amp;amp;idt[i], IDT_DESC_ATTR_DPL0, intr_entry_table[i]);&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;span style=&quot;&quot;&gt;&#9;&lt;/span&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#9;&lt;/span&gt;}&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;}&lt;/span&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="-810" y="400" width="460" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="21" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="7" target="8" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="22" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="7" target="9" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="&lt;span style=&quot;&quot;&gt;【interrupt.c】&lt;/span&gt;&lt;br&gt;void make_idt_desc(struct gate_desc* p_gdesc, uint8_t attr, intr_handler function)" style="rounded=1;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="-810" y="530" width="460" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="&lt;span style=&quot;&quot;&gt;【interrupt.c】&lt;/span&gt;&lt;br&gt;struct gate_desc idt[IDT_DESC_CNT];" style="rounded=1;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="-810" y="630" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="30" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="9" target="24" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="-270" y="715"/>
+                            <mxPoint x="-270" y="465"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="9" value="&lt;span style=&quot;&quot;&gt;【kernel.S】&lt;br&gt;&lt;/span&gt;section .data&lt;br&gt;inter_entry_table:&lt;br&gt;&lt;br&gt;section .text&lt;br&gt;// 保存上下文&lt;br&gt;call [idt_table + %1*4]&lt;br&gt;&lt;br&gt;section .data&lt;br&gt;dd intr%1entry" style="rounded=1;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="-470" y="630" width="130" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="【interrupt.c】&lt;br&gt;void pic_init()：// initialize 8259A" style="rounded=1;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="400" width="180" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" value="" style="endArrow=classic;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="2" target="4" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="-430" y="500" as="sourcePoint"/>
+                        <mxPoint x="-380" y="450" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="-580" y="315"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="13" value="" style="endArrow=classic;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2" target="10" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="-430" y="500" as="sourcePoint"/>
+                        <mxPoint x="-380" y="450" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="-125" y="315"/>
+                            <mxPoint x="290" y="315"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="31" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="24" target="27" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="24" value="【interrupt.c】&lt;br&gt;intr_handler idt_table[IDT_DESC_CNT];&lt;br&gt;&lt;br&gt;void exception_init(void) {&lt;br&gt;&lt;span style=&quot;&quot;&gt;&#9;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;&#9;&lt;/span&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#9;&lt;/span&gt;for(int i = 0; i &amp;lt; IDT_DESC_CNT; i++) {&lt;br&gt;&lt;span style=&quot;&quot;&gt;&#9;&lt;span style=&quot;&quot;&gt;&#9;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;&#9;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;&#9;&lt;/span&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#9;&lt;/span&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#9;&lt;/span&gt;idt_table[i] = general_intr_handler;&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;&quot;&gt;&#9;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;&#9;&lt;/span&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#9;&lt;/span&gt;}&lt;br&gt;}" style="rounded=1;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="-200" y="400" width="250" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="27" value="&lt;span style=&quot;&quot;&gt;【interrupt.c】&lt;br&gt;void general_intr_handler(uint8_t vec_nr)：&lt;br&gt;// 中断处理程序&lt;br&gt;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="-200" y="570" width="250" height="60" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

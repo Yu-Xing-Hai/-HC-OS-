@@ -1,0 +1,342 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor",
+  "elements": [
+    {
+      "id": "iN-HbEoI1JMkp2R-wnqW_",
+      "type": "rectangle",
+      "x": -64.37559589475995,
+      "y": 161.79095458984375,
+      "width": 209.11476215452558,
+      "height": 160,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": {
+        "type": 3
+      },
+      "seed": 1379800653,
+      "version": 314,
+      "versionNonce": 1387638221,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "SjB5hXiZGBrM18n54Hkx9"
+        },
+        {
+          "id": "S7URc1fgPfODO2lwXFcz_",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1733050949826,
+      "link": null,
+      "locked": false
+    },
+    {
+      "id": "SjB5hXiZGBrM18n54Hkx9",
+      "type": "text",
+      "x": -58.64820138976279,
+      "y": 191.79095458984375,
+      "width": 197.65997314453125,
+      "height": 100,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "seed": 530182349,
+      "version": 463,
+      "versionNonce": 1493370093,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1733050949832,
+      "link": null,
+      "locked": false,
+      "text": "BIOS\n1、将MBR从虚拟硬盘\n载入内存\n2、将控制权交给MBR",
+      "fontSize": 20,
+      "fontFamily": 1,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "baseline": 92,
+      "containerId": "iN-HbEoI1JMkp2R-wnqW_",
+      "originalText": "BIOS\n1、将MBR从虚拟硬盘载入内存\n2、将控制权交给MBR",
+      "lineHeight": 1.25
+    },
+    {
+      "id": "ejpKTocvXe_uG-zZfHAOd",
+      "type": "rectangle",
+      "x": 238.90471479638026,
+      "y": 172.57990605296163,
+      "width": 235.2940673828125,
+      "height": 136.24822998046875,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": {
+        "type": 3
+      },
+      "seed": 1652645699,
+      "version": 246,
+      "versionNonce": 2084930925,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "K89XB1wOuQjxwO4nHrMRx"
+        },
+        {
+          "id": "S7URc1fgPfODO2lwXFcz_",
+          "type": "arrow"
+        },
+        {
+          "id": "wdThf_NaoQmqPYsMFPlQD",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1733050918028,
+      "link": null,
+      "locked": false
+    },
+    {
+      "id": "K89XB1wOuQjxwO4nHrMRx",
+      "type": "text",
+      "x": 245.77178022606776,
+      "y": 190.704021043196,
+      "width": 221.5599365234375,
+      "height": 100,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "seed": 735552931,
+      "version": 369,
+      "versionNonce": 1936865741,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1733050957015,
+      "link": null,
+      "locked": false,
+      "text": "MBR\n1、将Loader从虚拟硬盘\n载入内存\n2、将控制权交给Loader",
+      "fontSize": 20,
+      "fontFamily": 1,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "baseline": 92,
+      "containerId": "ejpKTocvXe_uG-zZfHAOd",
+      "originalText": "MBR\n1、将Loader从虚拟硬盘载入内存\n2、将控制权交给Loader",
+      "lineHeight": 1.25
+    },
+    {
+      "id": "Faw0FI8tLU4RRzwdUsITa",
+      "type": "rectangle",
+      "x": 555.5943640942858,
+      "y": 160.1648395095325,
+      "width": 330.42969111365187,
+      "height": 160,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": {
+        "type": 3
+      },
+      "seed": 792699555,
+      "version": 374,
+      "versionNonce": 713437165,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "s8MvyFaZMwn9Se_luwXy2"
+        },
+        {
+          "id": "wdThf_NaoQmqPYsMFPlQD",
+          "type": "arrow"
+        }
+      ],
+      "updated": 1733050999664,
+      "link": null,
+      "locked": false
+    },
+    {
+      "id": "s8MvyFaZMwn9Se_luwXy2",
+      "type": "text",
+      "x": 561.9092462722055,
+      "y": 190.1648395095325,
+      "width": 317.7999267578125,
+      "height": 100,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "seed": 1324304163,
+      "version": 559,
+      "versionNonce": 192129613,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1733050999664,
+      "link": null,
+      "locked": false,
+      "text": "Loader\n1、实现分页机制\n2、实现从实模式到保护模式的转变\n3、将kernel.bin从虚拟硬盘载入内存",
+      "fontSize": 20,
+      "fontFamily": 1,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "baseline": 92,
+      "containerId": "Faw0FI8tLU4RRzwdUsITa",
+      "originalText": "Loader\n1、实现分页机制\n2、实现从实模式到保护模式的转变\n3、将kernel.bin从虚拟硬盘载入内存",
+      "lineHeight": 1.25
+    },
+    {
+      "id": "S7URc1fgPfODO2lwXFcz_",
+      "type": "arrow",
+      "x": 149.16966404245696,
+      "y": 239.12146881013297,
+      "width": 82.01163742185068,
+      "height": 0.8060275366971723,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": {
+        "type": 2
+      },
+      "seed": 2036403843,
+      "version": 110,
+      "versionNonce": 895919725,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1733050951761,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          82.01163742185068,
+          0.8060275366971723
+        ]
+      ],
+      "lastCommittedPoint": null,
+      "startBinding": {
+        "elementId": "iN-HbEoI1JMkp2R-wnqW_",
+        "gap": 4.430497782691333,
+        "focus": -0.046174099542136755
+      },
+      "endBinding": {
+        "elementId": "ejpKTocvXe_uG-zZfHAOd",
+        "gap": 7.723413332072667,
+        "focus": -0.006576787406928797
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow"
+    },
+    {
+      "id": "wdThf_NaoQmqPYsMFPlQD",
+      "type": "arrow",
+      "x": 480.76823274473566,
+      "y": 242.5462666495722,
+      "width": 66.58123143820751,
+      "height": 0.315476664282869,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": {
+        "type": 2
+      },
+      "seed": 531663811,
+      "version": 258,
+      "versionNonce": 240990989,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1733050999665,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          66.58123143820751,
+          -0.315476664282869
+        ]
+      ],
+      "lastCommittedPoint": null,
+      "startBinding": {
+        "elementId": "ejpKTocvXe_uG-zZfHAOd",
+        "gap": 6.5694505655428515,
+        "focus": 0.03827428160801644
+      },
+      "endBinding": {
+        "elementId": "Faw0FI8tLU4RRzwdUsITa",
+        "gap": 8.2448999113426,
+        "focus": -0.015400051639615536
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow"
+    }
+  ],
+  "appState": {
+    "gridSize": null,
+    "viewBackgroundColor": "#ffffff"
+  },
+  "files": {}
+}
