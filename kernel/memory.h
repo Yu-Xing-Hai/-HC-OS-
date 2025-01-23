@@ -5,6 +5,8 @@
 
 #define NULL ((void*)0)
 
+#define PG_SIZE 4096  //4kB = 4 * 1024 = 4096 Byte
+
 /*virtual address pool,it will be used to manage virutal address.*/
 struct virtual_addr{  //virtual address has 4GB space,it is different with physic address(only has 32MB memory),so we define two address pool.
     struct bitmap vaddr_bitmap;  //used to manage distribution condition of virtual address by unit of page.

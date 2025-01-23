@@ -5,7 +5,6 @@
 #include "string.h"
 #include "bitmap.h"
 
-#define PG_SIZE 4096  //4kB = 4 * 1024 = 4096 Byte
 /*
 The kernel stack's bottom is 0xc009f000， 0xc009e000 is kernel main thread's pcb.
 one page can present 128MB memory(4KB * 1024 * 8 * 4KB),so, we put bitmap to address of 0xc009a000,
