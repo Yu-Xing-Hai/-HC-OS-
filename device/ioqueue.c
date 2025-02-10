@@ -15,7 +15,7 @@ static int32_t next_pos(int32_t pos) {  //next position in ioqueue.
 }
 
 bool ioq_full(struct ioqueue* ioq) {
-    ASSERT(intr_get_status() == INTR_OFF);
+    ASSERT(intr_get_status() == INTR_OFF);  //ioqueue is public space, so we must make sure the interrupt is close when we operating.
     return next_pos(ioq->head) == ioq->tail;
 }
 

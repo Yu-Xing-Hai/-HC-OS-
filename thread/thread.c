@@ -7,6 +7,7 @@
 #include "interrupt.h"
 #include "print.h"
 #include "debug.h"
+#include "process.h"
 
 #define PG_SIZE 4096
 
@@ -35,7 +36,7 @@ static void kernel_thread(thread_func* function, void* func_arg) {
 }
 
 /*initlalize thread_stack*/
-void thread_create(struct task_struct* pthread,thread_func function, void* func_arg) { //task_struct: struct of PCB
+void thread_create(struct task_struct* pthread, thread_func* function, void* func_arg) { //task_struct: struct of PCB
     /*reserved space of intr_stack*/
     pthread->self_kstack -= sizeof(struct intr_stack);
     /*reserved space of thread_stack*/
@@ -83,6 +84,23 @@ struct task_struct* thread_start(char* name, int prio, thread_func function, voi
     return thread;
 }
 
+/*Create User-process*/
+void process_execute(void* filename, char* name) {
+    struct task_struct* thread = get_kernel_pages(1);
+    init_thread(thread, name, default_prio);
+    create_user_vaddr_bitmap(thread);
+    thread_create(thread, start_process, filename);
+    thread->pgdir = create_page_dir();
+    
+    enum intr_status old_status = intr_disable();
+    ASSERT(!elem_find(&thread_ready_list, &thread->general_tag));
+    list_append(&thread_ready_list, &thread->general_tag);
+    
+    ASSERT(!elem_find(&thread_all_list, &thread->all_list_tag));
+    list_append(&thread_all_list, &thread->all_list_tag);
+    intr_set_status(old_status);
+}
+
 /*give main()(is main thread^^) an identity card(yes, is PCB)*/
 static void make_main_thread(void) {
     /*when we enter kernel, we make esp to 0xc009f000,
@@ -117,6 +135,10 @@ void schedule() {
     thread_tag = list_pop(&thread_ready_list);
     struct task_struct* next = elem2entry(struct task_struct, general_tag, thread_tag); //general_tag is the name of member.
     next->status = TASK_RUNNING;
+
+    /*Enable the task's page table and so on.*/
+    process_activate(next);
+    
     switch_to(cur, next);
 }
 
