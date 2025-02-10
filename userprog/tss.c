@@ -1,3 +1,4 @@
+#include "tss.h"
 #include "stdint.h"
 #include "print.h"
 #include "global.h"

@@ -57,6 +57,7 @@
 #define TSS_ATTR_HIGH  ((DESC_G_4K << 7) + (TSS_DESC_D << 6) + (DESC_L << 5) + (DESC_AVL << 4) + 0x0)
 #define TSS_ATTR_LOW  ((DESC_P << 7) + (DESC_DPL_0 << 5) + (DESC_S_SYS << 4) + DESC_TYPE_TSS)
 #define SELECTOR_TSS  ((4 << 3) + (TI_GDT << 2) + RPL0)
+
 /*define the descriptor in GDT*/
 struct gdt_desc {
     uint16_t limit_low_word;
@@ -66,4 +67,18 @@ struct gdt_desc {
     uint8_t limit_high_attr_high;
     uint8_t base_high_byte;
 };
+
+/*define the EFLAGS register's attributes*/
+#define EFLAGS_MBS    (1 << 1)
+#define EFLAGS_IF_1   (1 << 9)  //open interrupt
+#define EFLAGS_IF_0   (0 << 9)        //close interrupt
+#define EFLAGS_IOPL_3  (3 << 12)
+#define EFLAGS_IOPL_0  (0 << 12)
+#define NULL  ((void*)0)
+#define DIV_ROUND_UP(X, STEP)  ((X + STEP - 1) / (STEP))
+#define bool int
+#define true 1
+#define false 0
+
+#define PG_SIZE 4096
 #endif
