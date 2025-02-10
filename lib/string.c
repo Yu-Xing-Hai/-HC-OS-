@@ -16,7 +16,7 @@ void memcpy(void* dst_, const void* src_, uint32_t size) {
     uint8_t* dst = dst_;
     const uint8_t* src = src_;
     while(size-- > 0)
-        *dst++ = *src++;
+        *dst++ = *src++;  //copy by byte.
 }
 
 int memcmp(const void* a_, const void* b_, uint32_t size) {

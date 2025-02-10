@@ -4,8 +4,9 @@
 #include "debug.h"
 #include "string.h"
 #include "bitmap.h"
+#include "sync.h"
+#include "thread.h"
 
-#define PG_SIZE 4096  //4kB = 4 * 1024 = 4096 Byte
 /*
 The kernel stack's bottom is 0xc009f000， 0xc009e000 is kernel main thread's pcb.
 one page can present 128MB memory(4KB * 1024 * 8 * 4KB),so, we put bitmap to address of 0xc009a000,
@@ -20,6 +21,7 @@ struct pool {   //used to manage physic memory.
     struct bitmap pool_bitmap;
     uint32_t phy_addr_start;
     uint32_t pool_size;
+    struct lock lock;
 };
 
 #define PDE_IDX(addr) ((addr & 0xffc00000) >> 22)  //get high 10 bit of 32 address
@@ -28,7 +30,7 @@ struct pool {   //used to manage physic memory.
 struct pool kernel_pool, user_pool; //manage physic
 struct virtual_addr kernel_vaddr;   //manage virtual
 
-/*applicate virtual page in pf(pool flag) by quantity of pg_cnt,if successful ,return the start address of virtual page,of fail,return NULL*/
+/*applicate virtual page in pf(pool flag) with quantity of pg_cnt,if successful ,return the start address of virtual page,if fail,return NULL*/
 static void* vaddr_get(enum pool_flags pf, uint32_t pg_cnt) {
     int vaddr_start = 0, bit_idx_start = -1;  //bit_idx is the index in bitmap.
     uint32_t cnt = 0;
@@ -43,7 +45,18 @@ static void* vaddr_get(enum pool_flags pf, uint32_t pg_cnt) {
         vaddr_start = kernel_vaddr.vaddr_start + bit_idx_start * PG_SIZE;
     }
     else {
-        // User memory pool, we will add it when we do user processes.
+        // User memory pool
+        struct task_struct* cur = running_thread();
+        bit_idx_start = bitmap_scan(&cur->userprog_vaddr.vaddr_bitmap, pg_cnt);  //pay attention: bitmap_scan()'s parameter is an bitmap structure's address,not an bitmap's address.
+        if(bit_idx_start == -1) {
+            return NULL;
+        }
+        while(cnt < pg_cnt) {
+            bitmap_set(&cur->userprog_vaddr.vaddr_bitmap, bit_idx_start + cnt++, 1); //indicate these pages have be used.
+        }
+        vaddr_start = cur->userprog_vaddr.vaddr_start + bit_idx_start * PG_SIZE;
+        /*(0xc0000000 - PG_SIZE) has be distributed to the stack of level 3 by start_process() function.*/
+        ASSERT((uint32_t)vaddr_start < (0xc0000000 - PG_SIZE));
     }
     return (void*)vaddr_start;
 }
@@ -138,13 +151,63 @@ void* malloc_page(enum pool_flags pf, uint32_t pg_cnt) {
     return vaddr_start;
 }
 
-/*apply one page memory from pyhsic kernel memory pool, if success, return virtual address,else,return NULL.*/
+/*apply one page memory from virtual kernel memory pool, if success, return virtual address,else,return NULL.*/
 void* get_kernel_pages(uint32_t pg_cnt) {
     void* vaddr = malloc_page(PF_KERNEL, pg_cnt);
     if(vaddr != NULL) {
         memset(vaddr, 0, pg_cnt * PG_SIZE);  //clean this memory space which you have applied.
     }
     return vaddr;
+}
+
+/*apply one page memory from virtual user's memory pool, if success, return virtual address,else,return NULL.*/
+void* get_user_pages(uint32_t pg_cnt) {
+    lock_acquire(&user_pool.lock);
+    void* vaddr = malloc_page(PF_USER, pg_cnt);
+    if(vaddr != NULL) {
+        memset(vaddr, 0, pg_cnt * PG_SIZE);  //clean this memory space which you have applied.
+    }
+    lock_release(&user_pool.lock);
+    return vaddr;
+}
+
+/*get_a_page(enum pool_flags pf, uint32_t vaddr) mapping vaddr and paddr in pf autonomously, and only support one physic page's distribution.
+get_user_pages(uint32_t pg_cnt) and get_user_pages(uint32_t pg_cnt) automatically designate the vaddr and mapping it to a paddr.
+*/
+void* get_a_page(enum pool_flags pf, uint32_t vaddr) {
+    struct pool* mem_pool = pf & PF_KERNEL ? &kernel_pool : &user_pool;  //physic memory pool's manmger.
+    lock_acquire(&mem_pool->lock);
+
+    struct task_struct* cur = running_thread();
+    int32_t bit_idx = -1;
+
+    if(cur->pgdir != NULL && pf == PF_USER) { //User's process apply memory.
+        bit_idx = (vaddr - cur->userprog_vaddr.vaddr_start) / PG_SIZE;
+        ASSERT(bit_idx > 0);
+        bitmap_set(&cur->userprog_vaddr.vaddr_bitmap, bit_idx, 1);
+    }
+    else if(cur->pgdir == NULL && pf == PF_KERNEL) { //Kernel's thread apply memory.
+        bit_idx = (vaddr - kernel_vaddr.vaddr_start) / PG_SIZE;
+        ASSERT(bit_idx > 0);
+        bitmap_set(&kernel_vaddr.vaddr_bitmap, bit_idx, 1);
+    }
+    else {
+        PANIC("get_a_page: not allow kernel alloc userspace or user alloc kernelspace by get_a_page.");
+    }
+
+    void* page_phyaddr = palloc(mem_pool);
+    if(page_phyaddr == NULL) {
+        return NULL;
+    }
+    page_table_add((void*)vaddr, page_phyaddr);
+    lock_release(&mem_pool->lock);
+    return (void*)vaddr;
+}
+
+/*Get the physic address which is mapped with designate virtual address.*/
+uint32_t addr_v2p(uint32_t vaddr) {
+    uint32_t* pte = pte_ptr(vaddr);
+    return ((*pte & 0xfffff000) + (vaddr & 0x00000fff));
 }
 
 /*initialize memory pool and ralated structures*/
@@ -174,6 +237,9 @@ static void mem_pool_init(uint32_t all_mem) {
 
     kernel_pool.pool_bitmap.bits = (void*)MEM_BITMAP_BASE;
     user_pool.pool_bitmap.bits = (void*)(MEM_BITMAP_BASE + kbm_length);
+
+    lock_init(&kernel_pool.lock);
+    lock_init(&user_pool.lock);
 
     put_str("kernel_pool_bitmap_start: ");
     put_int((int)kernel_pool.pool_bitmap.bits);

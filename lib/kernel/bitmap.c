@@ -8,7 +8,7 @@
 
 void bitmap_init(struct bitmap* btmp) {
     memset(btmp->bits, 0, btmp->btmp_bytes_len);
-    /*bits is a pointer and is's type is int8_t,it means bits++, the pointer's address will add one byte.*/
+    /*bits is a pointer and is's type is int8_t*,it means bits++, the pointer's address will add one byte.*/
 }
 
 /*judge the bit which index is bit_index in bitmap whether is 1 or 0*/

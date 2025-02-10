@@ -6,6 +6,7 @@
 #define BITMAP_MASK 1
 struct bitmap {
     uint32_t btmp_bytes_len;
+    /*bits's type is pointer,it means bits++, the pointer's address will add one byte.*/
     uint8_t* bits;  // other module create bitmap which type is uint8_t, then ,that module translate it's bitmap's head address to bits.
 };
 
