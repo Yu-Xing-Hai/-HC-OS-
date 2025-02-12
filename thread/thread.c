@@ -8,6 +8,7 @@
 #include "print.h"
 #include "debug.h"
 #include "process.h"
+#include "sync.h"
 
 #define PG_SIZE 4096
 
@@ -17,6 +18,8 @@ struct list thread_all_list;   //the list of all task,it is a list include all t
 /*we use PCB to manage thread, so we need to translate thread's tag to thread's PCB.*/
 static struct list_elem* thread_tag;  //Be used to store thread's tag when we want to translate. 
 
+struct lock pid_lock;  //lock of pid
+
 extern void switch_to(struct task_struct* cur, struct task_struct* next);
 
 /*get the PCB pointer of current thread*/
@@ -25,6 +28,15 @@ struct task_struct* running_thread() {
     asm ("mov %%esp, %0" : "=g"(esp));
     /*get the start address of PCB*/
     return (struct task_struct*)(esp & 0xfffff000);
+}
+
+/*destribute the pid.*/
+static pid_t allocate_pid(void) {
+    static pid_t next_pid = 0;
+    lock_acquire(&pid_lock);
+    next_pid++;
+    lock_release(&pid_lock);
+    return next_pid;
 }
 
 static void kernel_thread(thread_func* function, void* func_arg) {
@@ -53,6 +65,7 @@ you can say initialize PCB*/
 void init_thread(struct task_struct* pthread, char* name, int prio) {
     memset(pthread, 0, sizeof(*pthread));  //the value of sizeof(*pthread) is just a structure's size of task_struct instead of a page's size, so don't warry about return address.
 
+    pthread->pid = allocate_pid();
     pthread->self_kstack = (uint32_t*)((uint32_t)pthread + PG_SIZE);
     if(pthread == main_thread) {
         pthread->status = TASK_RUNNING;
@@ -171,6 +184,7 @@ void thread_init(void) {
     put_str("thread_init start\n");
     list_init(&thread_ready_list);
     list_init(&thread_all_list);
+    lock_init(&pid_lock);
 
 /*create current main() function to main thread.*/
     make_main_thread();

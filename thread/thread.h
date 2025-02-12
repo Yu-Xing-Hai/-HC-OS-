@@ -6,6 +6,7 @@
 
 /*will be used as parameter in create-thread function*/
 typedef void thread_func(void*);
+typedef int16_t pid_t;
 
 /*the status of process or thread.*/
 enum task_status {
@@ -60,6 +61,7 @@ struct thread_stack {
 /*process or thread's PCB(program control block)*/
 struct task_struct {
     uint32_t* self_kstack;
+    pid_t pid;
     enum task_status status;
     char name[16];
     uint8_t priority;
