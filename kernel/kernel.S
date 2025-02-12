@@ -46,6 +46,36 @@ intr_exit:
    add esp, 4   ;skip the error_code or 0 in stack
    iret
    
+;--------------------  The interrupt-number of 0x80 --------------------
+[bits 32]
+extern syscall_table
+section .text
+global syscall_handler
+syscall_handler:
+;first: store the environment of task.
+   push 0
+
+   push ds
+   push es
+   push fs
+   push gs
+   pushad  ;the queue of push-commend is: EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI,!payattention! the way of push is esp--,then write value.
+
+   push 0x80
+
+;second: put the parameters for syscall.
+   push edx  ;the third parameter
+   push ecx  ;the second parameter
+   push ebx  ;the first parameter
+
+;third: call the sub-function of syscall.
+   call [syscall_table + eax*4]
+   add esp, 12  ;skip three parameters of syscall
+
+;fourth: store the call-function's return value to the position of eax in current kernel stack.
+   mov [esp + (1+7)*4], eax  ;we have used 'pushad' to push 8 registers and push 0x80 in stack, so the position of eax in kernel stack is (1+7)*4.
+   jmp intr_exit ;recover the environment of task.
+
 VECTOR 0x00,ZERO
 VECTOR 0x01,ZERO
 VECTOR 0x02,ZERO
