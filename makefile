@@ -7,13 +7,13 @@ LIB = -I /home/yuxinghai/bochs/lib/ -I /home/yuxinghai/bochs/lib/kernel/ -I /hom
 ASFLAGS = -f elf
 CCFLAGS = -m32 -Wall $(LIB) -c -fno-builtin -W -Wstrict-prototypes -Wmissing-prototypes
 LDFLAGS = -m elf_i386 -Ttext $(ENTRY_POINT) -e main -Map $(BUILD_DIR)/kernel.map
-OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o $(BUILD_DIR)/timer.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/print.o $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o $(BUILD_DIR)/bitmap.o $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o $(BUILD_DIR)/list.o $(BUILD_DIR)/switch.o $(BUILD_DIR)/sync.o $(BUILD_DIR)/console.o $(BUILD_DIR)/keyboard.o $(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/tss.o $(BUILD_DIR)/process.o
+OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o $(BUILD_DIR)/timer.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/print.o $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o $(BUILD_DIR)/bitmap.o $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o $(BUILD_DIR)/list.o $(BUILD_DIR)/switch.o $(BUILD_DIR)/sync.o $(BUILD_DIR)/console.o $(BUILD_DIR)/keyboard.o $(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/tss.o $(BUILD_DIR)/process.o $(BUILD_DIR)/syscall.o $(BUILD_DIR)/syscall-init.o
 
 #################################       The compile of C program    ##############################
-$(BUILD_DIR)/main.o : /home/yuxinghai/bochs/kernel/main.c /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/kernel/init.h /home/yuxinghai/bochs/thread/thread.h /home/yuxinghai/bochs/kernel/interrupt.h /home/yuxinghai/bochs/device/console.h /home/yuxinghai/bochs/userprog/process.h
+$(BUILD_DIR)/main.o : /home/yuxinghai/bochs/kernel/main.c /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/kernel/init.h /home/yuxinghai/bochs/thread/thread.h /home/yuxinghai/bochs/kernel/interrupt.h /home/yuxinghai/bochs/device/console.h /home/yuxinghai/bochs/userprog/process.h  /home/yuxinghai/bochs/lib/user/syscall.h  /home/yuxinghai/bochs/userprog/syscall-init.h
 	$(CC) $(CCFLAGS) $< -o $@
 
-$(BUILD_DIR)/init.o : /home/yuxinghai/bochs/kernel/init.c /home/yuxinghai/bochs/kernel/init.h /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/kernel/interrupt.h /home/yuxinghai/bochs/device/timer.h /home/yuxinghai/bochs/kernel/memory.h /home/yuxinghai/bochs/thread/thread.h /home/yuxinghai/bochs/device/console.h /home/yuxinghai/bochs/device/keyboard.h /home/yuxinghai/bochs/userprog/tss.h
+$(BUILD_DIR)/init.o : /home/yuxinghai/bochs/kernel/init.c /home/yuxinghai/bochs/kernel/init.h /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/kernel/interrupt.h /home/yuxinghai/bochs/device/timer.h /home/yuxinghai/bochs/kernel/memory.h /home/yuxinghai/bochs/thread/thread.h /home/yuxinghai/bochs/device/console.h /home/yuxinghai/bochs/device/keyboard.h /home/yuxinghai/bochs/userprog/tss.h /home/yuxinghai/bochs/userprog/syscall-init.h
 	$(CC) $(CCFLAGS) $< -o $@
 
 $(BUILD_DIR)/interrupt.o : /home/yuxinghai/bochs/kernel/interrupt.c /home/yuxinghai/bochs/kernel/interrupt.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/kernel/global.h /home/yuxinghai/bochs/lib/kernel/io.h /home/yuxinghai/bochs/lib/kernel/print.h
@@ -34,7 +34,7 @@ $(BUILD_DIR)/bitmap.o : /home/yuxinghai/bochs/lib/kernel/bitmap.c /home/yuxingha
 $(BUILD_DIR)/memory.o : /home/yuxinghai/bochs/kernel/memory.c /home/yuxinghai/bochs/kernel/memory.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/lib/kernel/bitmap.h /home/yuxinghai/bochs/kernel/debug.h /home/yuxinghai/bochs/lib/string.h /home/yuxinghai/bochs/lib/kernel/bitmap.h /home/yuxinghai/bochs/thread/sync.h /home/yuxinghai/bochs/thread/thread.h
 	$(CC) $(CCFLAGS) $< -o $@
 
-$(BUILD_DIR)/thread.o : /home/yuxinghai/bochs/thread/thread.c /home/yuxinghai/bochs/thread/thread.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/lib/string.h /home/yuxinghai/bochs/kernel/global.h /home/yuxinghai/bochs/kernel/memory.h /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/kernel/debug.h /home/yuxinghai/bochs/userprog/process.h
+$(BUILD_DIR)/thread.o : /home/yuxinghai/bochs/thread/thread.c /home/yuxinghai/bochs/thread/thread.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/lib/string.h /home/yuxinghai/bochs/kernel/global.h /home/yuxinghai/bochs/kernel/memory.h /home/yuxinghai/bochs/lib/kernel/print.h /home/yuxinghai/bochs/kernel/debug.h /home/yuxinghai/bochs/userprog/process.h /home/yuxinghai/bochs/thread/sync.h
 	$(CC) $(CCFLAGS) $< -o $@
 
 $(BUILD_DIR)/list.o : /home/yuxinghai/bochs/kernel/list.c /home/yuxinghai/bochs/kernel/list.h /home/yuxinghai/bochs/kernel/interrupt.h /home/yuxinghai/bochs/lib/stdbool.h /home/yuxinghai/bochs/lib/stdint.h
@@ -56,6 +56,12 @@ $(BUILD_DIR)/tss.o : /home/yuxinghai/bochs/userprog/tss.c /home/yuxinghai/bochs/
 	$(CC) $(CCFLAGS) $< -o $@
 
 $(BUILD_DIR)/process.o : /home/yuxinghai/bochs/userprog/process.c /home/yuxinghai/bochs/userprog/process.h /home/yuxinghai/bochs/thread/thread.h /home/yuxinghai/bochs/kernel/global.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/kernel/memory.h /home/yuxinghai/bochs/kernel/kernel.h /home/yuxinghai/bochs/userprog/tss.h /home/yuxinghai/bochs/device/console.h /home/yuxinghai/bochs/lib/string.h /home/yuxinghai/bochs/kernel/interrupt.h /home/yuxinghai/bochs/kernel/debug.h /home/yuxinghai/bochs/kernel/list.h
+	$(CC) $(CCFLAGS) $< -o $@
+
+$(BUILD_DIR)/syscall.o : /home/yuxinghai/bochs/lib/user/syscall.c /home/yuxinghai/bochs/lib/user/syscall.h /home/yuxinghai/bochs/lib/stdint.h
+	$(CC) $(CCFLAGS) $< -o $@
+
+$(BUILD_DIR)/syscall-init.o : /home/yuxinghai/bochs/userprog/syscall-init.c /home/yuxinghai/bochs/userprog/syscall-init.h /home/yuxinghai/bochs/lib/user/syscall.h /home/yuxinghai/bochs/thread/thread.h /home/yuxinghai/bochs/lib/stdint.h /home/yuxinghai/bochs/lib/kernel/print.h
 	$(CC) $(CCFLAGS) $< -o $@
 ################################   The compile of assembly program    ##############################
 $(BUILD_DIR)/kernel.o : /home/yuxinghai/bochs/kernel/kernel.S
