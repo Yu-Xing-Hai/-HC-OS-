@@ -6,7 +6,7 @@ LOADER_STACK_TOP  equ LOADER_BASE_ADDR
 GDT_BASE:  dd  0x00000000
 		dd  0x00000000  ;The first(0) descriptor is not use.
 
-CODE_DESC: dd  0x0000FFFF
+CODE_DESC: dd  0x0000FFFF   ;flat model,limit = 0xFFFF,base = 0x0000.
 		dd  DESC_CODE_HIGH4
 
 DATA_STACK_DESC: dd  0x0000FFFF

@@ -34,7 +34,16 @@
 
 /*Define the User's system-call-interface which will be used in User-process*/
 
-/*Return PID of current task*/
+/*
+************************ Syscall Interface ****************
+First: Return PID of current task
+Second: Write the buffer to the console
+*/
 uint32_t getpid(void) {
     return _syscall0(SYS_GETPID);
+}
+
+/*Print the string of str.*/
+uint32_t write(char* str) {  //When we access the file system, we will change it again.
+    return _syscall1(SYS_WRITE, str);  //This function will return the length of the string.
 }
