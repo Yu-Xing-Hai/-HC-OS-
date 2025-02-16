@@ -97,23 +97,6 @@ struct task_struct* thread_start(char* name, int prio, thread_func function, voi
     return thread;
 }
 
-/*Create User-process*/
-void process_execute(void* filename, char* name) {
-    struct task_struct* thread = get_kernel_pages(1);
-    init_thread(thread, name, default_prio);
-    create_user_vaddr_bitmap(thread);
-    thread_create(thread, start_process, filename);
-    thread->pgdir = create_page_dir();
-    
-    enum intr_status old_status = intr_disable();
-    ASSERT(!elem_find(&thread_ready_list, &thread->general_tag));
-    list_append(&thread_ready_list, &thread->general_tag);
-    
-    ASSERT(!elem_find(&thread_all_list, &thread->all_list_tag));
-    list_append(&thread_all_list, &thread->all_list_tag);
-    intr_set_status(old_status);
-}
-
 /*give main()(is main thread^^) an identity card(yes, is PCB)*/
 static void make_main_thread(void) {
     /*when we enter kernel, we make esp to 0xc009f000,
