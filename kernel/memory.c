@@ -6,6 +6,8 @@
 #include "bitmap.h"
 #include "sync.h"
 #include "thread.h"
+#include "interrupt.h"
+#include "list.h"
 
 /*
 The kernel stack's bottom is 0xc009f000， 0xc009e000 is kernel main thread's pcb.
@@ -15,6 +17,8 @@ so,our system can offer 4(0x9b000-0x9a000 = 2^12 = 4KB) page of bitmap,these can
 #define MEM_BITMAP_BASE 0xc009a000
 /*-------------------------------------------------*/
 #define K_HEAP_START 0xc0100000  //pay attention: PAGE_DIR_TABLE_POS equ 0x100000 is an physic address and this is virtual address.
+#define PDE_IDX(addr) ((addr & 0xffc00000) >> 22)  //get high 10 bit of 32 address
+#define PTE_IDX(addr) ((addr & 0x003ff000) >> 12)  //get mid 10 bit of 32 address
 
 /*The struct of memory pool, it will be used to create two object to manage kernel memory pool and user memory pool.*/
 struct pool {   //used to manage physic memory.
@@ -24,8 +28,18 @@ struct pool {   //used to manage physic memory.
     struct lock lock;
 };
 
-#define PDE_IDX(addr) ((addr & 0xffc00000) >> 22)  //get high 10 bit of 32 address
-#define PTE_IDX(addr) ((addr & 0x003ff000) >> 12)  //get mid 10 bit of 32 address
+/*Memory warehouse*/
+/*
+In the future, we will give more than one page frame to one arena's struct-pointer, and it's Yuan information will use 12Byte to record.
+*/
+struct arena {
+    struct mem_block_desc* desc;  //This arena belongs to which memory block descriptor.
+    uint32_t cnt;  //large = false: The number of free memory block in this arena, large = true: The number of page frame, we will use it when we free the memory in future.
+    bool large;
+};
+
+/*The more index larger, the more bigger block size is.*/
+struct mem_block_desc k_block_descs[DESC_CNT];  //kernel memory block descriptor array, it will be define in PCB.
 
 struct pool kernel_pool, user_pool; //manage physic
 struct virtual_addr kernel_vaddr;   //manage virtual
@@ -270,10 +284,264 @@ static void mem_pool_init(uint32_t all_mem) {
     put_str("mem_pool_init done\n");
 }
 
+/*Prepare for malloc*/
+void block_desc_init(struct mem_block_desc* desc_array) {
+    uint16_t desc_idx, block_size = 16;
+    for(desc_idx = 0; desc_idx < DESC_CNT; desc_idx++) {
+        desc_array[desc_idx].block_size = block_size;
+        desc_array[desc_idx].blocks_per_arena = (PG_SIZE - sizeof(struct arena)) / block_size;
+        list_init(&desc_array[desc_idx].free_list);
+        block_size *= 2;  //Update to the next block size.
+    }
+}
+
+/*Return the address of 'NO. idx' memory block from arena*/
+static struct mem_block* arena2block(struct arena* a, uint32_t idx) {
+    return (struct mem_block*)((uint32_t)a + sizeof(struct arena) + idx * a->desc->block_size);
+}
+
+/*Return the address of arena which has the block of 'b'*/
+static struct arena* block2arena(struct mem_block* b) {
+    return (struct arena*)((uint32_t)b & 0xfffff000);   //arena's unit is page(4KB).
+}
+
+/*Apply memory of 'size' size in heap.*/
+void* sys_malloc(uint32_t size) {
+    //Preparation
+    enum pool_flags PF;
+    struct pool* mem_pool;
+    uint32_t pool_size;
+    struct mem_block_desc* descs;
+    struct task_struct* cur_thread = running_thread();
+
+    /*Judge to use whcih memory-pool.*/
+    if(cur_thread->pgdir == NULL) {  //kernel thread
+        PF = PF_KERNEL;
+        pool_size = kernel_pool.pool_size;
+        mem_pool = &kernel_pool;
+        descs = k_block_descs;
+    }
+    else {  //user process
+        PF = PF_USER;
+        pool_size = user_pool.pool_size;
+        mem_pool = &user_pool;
+        descs = cur_thread->u_block_desc;
+    }
+
+    if(!(size > 0 && size < pool_size)) {  //size must be in the range of (0, pool_size).
+        return NULL;
+    }
+    struct arena* a;
+    struct mem_block* b;
+    lock_acquire(&mem_pool->lock);
+
+/*Condition One: The size of applying is more than 1024*/
+    if(size > 1024) {
+        uint32_t page_cnt = DIV_ROUND_UP(size + sizeof(struct arena), PG_SIZE);  //page_cnt is the number of page which we need to apply.
+
+        a = malloc_page(PF, page_cnt);  //apply page.
+
+        if(a != NULL) {
+            memset(a, 0, page_cnt * PG_SIZE);  //clean this memory space which you have applied.
+/*For large page frame, the desc is NULL, and large is true, the cnt is the number of page frame.*/
+            a->desc = NULL;
+            a->cnt = page_cnt;
+            a->large = true;
+            lock_release(&mem_pool->lock);
+            return (void*)(a + 1);  //skip the size of arena return the remainder memory.
+        }
+        else {
+            lock_release(&mem_pool->lock);
+            return NULL;
+        }
+    }
+    
+/*Condition Two: The size of applying is less than 1024*/
+    else {
+        uint8_t desc_idx;
+        /*Match the suitable size of memory block in memory-block-descriptor.*/
+        for(desc_idx = 0; desc_idx < DESC_CNT; desc_idx++) {  //The parameter of desc_idx will be changed.
+            if(size <= descs[desc_idx].block_size) {
+                break;
+            }
+        }
+        /*if mem_block_desc's free_list don't have mem_block to use, then, create new arena to provide mem_block.*/
+        if(list_empty(&descs[desc_idx].free_list) == true) {
+            a = malloc_page(PF, 1);  //apply page from virtual memory pool to be new arena.
+            if(a == NULL) {
+                lock_release(&mem_pool->lock);
+                return NULL;
+            }
+            memset(a, 0, PG_SIZE);
+/*For little memory block, the desc is the corresponding mem_block_desc, and large is false, the cnt is the number of blocks in one arena.*/
+            a->desc = &descs[desc_idx];
+            a->large = false;
+            a->cnt = descs[desc_idx].blocks_per_arena;
+            uint32_t block_idx;           
+            enum intr_status old_status = intr_disable();
+
+/*Begin to split the arena to little mem_block, and add them to free_list in mem_block_desc.*/             
+            for(block_idx = 0; block_idx < descs[desc_idx].blocks_per_arena; block_idx++) {
+                b = arena2block(a, block_idx);
+                ASSERT(!elem_find(&a->desc->free_list, &b->free_elem));
+                list_append(&a->desc->free_list, &b->free_elem);
+            }
+            intr_set_status(old_status);
+        }
+
+        /*Begin to distribute mem_block.*/
+        /*Get one memory block from free_list in mem_block_desc.*/
+        b = elem2entry(struct mem_block, free_elem, list_pop(&(descs[desc_idx].free_list)));
+        memset(b, 0, descs[desc_idx].block_size);
+
+        a = block2arena(b);   //Get the arena which has the block of 'b'.
+        a->cnt--;  //The number of free memory block in this arena will decrease one.
+        lock_release(&mem_pool->lock);
+        return (void*)b;
+    }
+}
+
+/*Recycle the physic address of pg_phy_addr to physic memory pool.*/
+/*Physic pool has two type: kernel physic pool; user physic pool.*/
+void pfree(uint32_t pg_phy_addr) {
+    struct pool* mem_pool;
+    uint32_t bit_idx = 0;
+    if(pg_phy_addr >= user_pool.phy_addr_start) {  //User's physic memory pool.
+        mem_pool = &user_pool;
+        bit_idx = (pg_phy_addr - user_pool.phy_addr_start) / PG_SIZE;
+    }
+    else {  //Kernel's physic memory pool.
+        mem_pool = &kernel_pool;
+        bit_idx = (pg_phy_addr - kernel_pool.phy_addr_start) / PG_SIZE;
+    }
+    bitmap_set(&mem_pool->pool_bitmap, bit_idx, 0);  //set the corresponding bit to 0.
+}
+
+/*Cancle the mapping from PTE to physic address in PT(don't change PDE)*/
+static void page_table_pte_remove(uint32_t vaddr) {
+    uint32_t* pte = pte_ptr(vaddr);
+    *pte &= ~PG_P_1;  //set the 'P' attribute bit to 0,"~" is set 1 to 0.
+    asm volatile ("invlpg %0"::"m"(vaddr):"memory");  //update TLB,"m": virtual address memory.
+}
+
+/*Remove virtual address*/
+static void vaddr_remove(enum pool_flags pf, void* _vaddr, uint32_t pg_cnt) {
+    uint32_t bit_idx_start = 0, vaddr = (uint32_t)_vaddr, cnt = 0;
+
+    if(pf == PF_KERNEL) {  //Kernel's virtual memory pool
+        bit_idx_start = (vaddr - kernel_vaddr.vaddr_start) / PG_SIZE;
+        while(cnt < pg_cnt) {
+            bitmap_set(&kernel_vaddr.vaddr_bitmap, bit_idx_start + cnt++, 0);
+        }
+    }
+    else {  //User's virtual memory pool
+        struct task_struct* cur = running_thread();
+        bit_idx_start = (vaddr - cur->userprog_vaddr.vaddr_start) / PG_SIZE;
+        while(cnt < pg_cnt) {
+            bitmap_set(&cur->userprog_vaddr.vaddr_bitmap, bit_idx_start + cnt++, 0);
+        }
+    }
+}
+
+/*Encapsulation: Remove physic page frame*/
+void mfree_page(enum pool_flags pf, void* _vaddr, uint32_t pg_cnt) {
+    uint32_t pg_phy_addr;
+    uint32_t vaddr = (uint32_t)_vaddr, page_cnt = 0;
+    ASSERT(pg_cnt >= 1 && vaddr % PG_SIZE == 0);
+    pg_phy_addr = addr_v2p(vaddr);  //get the physic address of vaddr.
+
+    /*Make sure the physic address which will be released is at low-1MB + 1KB PDT + 1KB PT outside.*/
+    ASSERT((pg_phy_addr % PG_SIZE) == 0 && pg_phy_addr >= 0x102000);
+    
+    if(pg_phy_addr >= user_pool.phy_addr_start) {  //User's physic memory pool.
+        vaddr -= PG_SIZE;
+        while(page_cnt < pg_cnt) {
+            vaddr += PG_SIZE;
+            pg_phy_addr = addr_v2p(vaddr);
+
+            ASSERT((pg_phy_addr % PG_SIZE) == 0 && pg_phy_addr >= user_pool.phy_addr_start);
+            /*First: Recycle the physic address of pg_phy_addr to physic memory pool.*/
+            pfree(pg_phy_addr);
+            /*Second: Cancle the mapping from PTE to physic address in PT(don't change PDE)*/
+            page_table_pte_remove(vaddr);
+
+            page_cnt++;
+        }
+        /*Third: Remove virtual address*/
+        vaddr_remove(pf, _vaddr, pg_cnt);
+    }
+    else {  //Kernel's physic memory pool.
+        vaddr -= PG_SIZE;
+        while(page_cnt < pg_cnt) {
+            vaddr += PG_SIZE;
+            pg_phy_addr = addr_v2p(vaddr);
+
+            ASSERT((pg_phy_addr % PG_SIZE) == 0 && pg_phy_addr >= kernel_pool.phy_addr_start && pg_phy_addr < user_pool.phy_addr_start);
+
+            /*First: Recycle the physic address of pg_phy_addr to physic memory pool.*/
+            pfree(pg_phy_addr);
+            /*Second: Cancle the mapping from PTE to physic address in PT(don't change PDE)*/
+            page_table_pte_remove(vaddr);
+
+            page_cnt++;
+        }
+        /*Third: Remove virtual address*/
+        vaddr_remove(pf, _vaddr, pg_cnt);
+    }
+}
+
+/*Recycle the memory which is pointed by ptr*/
+void sys_free(void* ptr) {
+    ASSERT(ptr != NULL);
+    if(ptr != NULL) {
+        enum pool_flags PF;
+        struct pool* mem_pool;
+
+        /*Judge whether is thread or process.*/
+        if(running_thread()->pgdir == NULL) {  //kernel thread
+            ASSERT((uint32_t)ptr >= K_HEAP_START);
+            PF = PF_KERNEL;
+            mem_pool = &kernel_pool;
+        }
+        else {  //user process
+            PF = PF_USER;
+            mem_pool = &user_pool;
+        }
+
+        lock_acquire(&mem_pool->lock);
+        struct mem_block* b = ptr;
+        struct arena* a = block2arena(b);
+
+        ASSERT(a->large == false || a->large == true);
+        if(a->desc == NULL && a->large == true) {  //large memory block(more than 1024Byte)
+            mfree_page(PF, a, a->cnt);
+        }
+        else {  //little memory block(less than 1024Byte)
+            /*First: Add the memory block to free_list in mem_block_desc.*/
+            list_append(&a->desc->free_list, &b->free_elem);
+            a->cnt++;
+            
+            /*Second: If all memory block in this arena are free, then, release this arena.*/
+            if(a->cnt == a->desc->blocks_per_arena) {  //it means all memory block in this arena are free.
+                uint32_t block_idx;
+                for(block_idx = 0; block_idx < a->desc->blocks_per_arena; block_idx++) {
+                    struct mem_block* b = arena2block(a, block_idx);
+                    ASSERT(elem_find(&a->desc->free_list, &b->free_elem));
+                    list_remove(&b->free_elem);
+                }
+                mfree_page(PF, a, 1);  //release this arena.
+            }
+        }
+        lock_release(&mem_pool->lock);
+    }
+}
+
 /*memory manage port's initial entry*/
 void mem_init() {
     put_str("mem_init start\n");
     uint32_t mem_bytes_total = (*(uint32_t*)(0xb00));  //0xb00: total_mem_bytes's address ,this value's defination can see loader.S
     mem_pool_init(mem_bytes_total);  //initialize memory pool.
+    /*Initialize the array of mem_block_desc(is k_block_descs), prepare for malloc*/
+    block_desc_init(k_block_descs);
     put_str("mem_init done\n");
 }
