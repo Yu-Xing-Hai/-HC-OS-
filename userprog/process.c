@@ -13,6 +13,9 @@
 
 extern void intr_exit(void);
 
+extern struct list thread_ready_list;
+extern struct list thread_all_list; 
+
 /*Building User-process' initialize messages.*/
 void start_process(void* filename_) {
     void* function = filename_;  //Address of User program.
@@ -83,4 +86,22 @@ void create_user_vaddr_bitmap(struct task_struct* user_prog) {
     user_prog->userprog_vaddr.vaddr_bitmap.bits = get_kernel_pages(bitmap_pg_cnt);  //get_kernel_pages()'s return type is an void*, and bits type is uint8_t*.
     user_prog->userprog_vaddr.vaddr_bitmap.btmp_bytes_len = (0xc0000000 - USER_VADDR_START) / PG_SIZE / 8;
     bitmap_init(&user_prog->userprog_vaddr.vaddr_bitmap);
+}
+
+/*Create User-process*/
+void process_execute(void* filename, char* name) {
+    struct task_struct* thread = get_kernel_pages(1);
+    init_thread(thread, name, default_prio);
+    create_user_vaddr_bitmap(thread);
+    thread_create(thread, start_process, filename);
+    thread->pgdir = create_page_dir();
+    block_desc_init(thread->u_block_desc);
+    
+    enum intr_status old_status = intr_disable();
+    ASSERT(!elem_find(&thread_ready_list, &thread->general_tag));
+    list_append(&thread_ready_list, &thread->general_tag);
+    
+    ASSERT(!elem_find(&thread_all_list, &thread->all_list_tag));
+    list_append(&thread_all_list, &thread->all_list_tag);
+    intr_set_status(old_status);
 }

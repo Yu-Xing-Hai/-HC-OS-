@@ -72,6 +72,7 @@ struct task_struct {
 
     uint32_t* pgdir;  //task is process, pgdir is the address of PDT, task is thread, pgdir is NULL.
     struct virtual_addr userprog_vaddr;  //each users' viarual address pool manager.
+    struct mem_block_desc u_block_desc[DESC_CNT];  //memory block descriptor for user-process, to aceieve heap-managing.
     uint32_t stack_magic;  //the boundary of stack,clock interrupt function will judge this value.
 };
 
