@@ -72,7 +72,7 @@ struct task_struct {
 
     uint32_t* pgdir;  //task is process, pgdir is the address of PDT, task is thread, pgdir is NULL.
     struct virtual_addr userprog_vaddr;  //each users' viarual address pool manager.
-    struct mem_block_desc u_block_desc[DESC_CNT];  //memory block descriptor for user-process, to aceieve heap-managing.
+    struct mem_block_desc u_block_descs[DESC_CNT];  //memory block descriptor for user-process, to aceieve heap-managing.
     uint32_t stack_magic;  //the boundary of stack,clock interrupt function will judge this value.
 };
 
@@ -80,12 +80,12 @@ void thread_create(struct task_struct* pthread, thread_func* function, void* fun
 void init_thread(struct task_struct* pthread, char* name, int prio);
 
 struct task_struct* thread_start(char* name, int prio, thread_func function, void* func_arg);
-void process_execute(void* filename, char* name);
 
 struct task_struct* running_thread(void);
 void thread_init(void);
 void schedule(void);
 void thread_block(enum task_status stat);
 void thread_unblock(struct task_struct* pthread);
+void thread_yield(void);
 
 #endif

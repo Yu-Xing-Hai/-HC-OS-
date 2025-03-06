@@ -120,9 +120,9 @@ static void pic_init(void) {
    outb(PIC_S_DATA, 0x02);
    outb(PIC_S_DATA, 0x01);
 
-   //only release IR1(the interrupt of keyboard), now, IF bit is 0, we must use "sti" to receive clock interrupt.
-   outb(PIC_M_DATA, 0xfe);  //The bit set to '1' is mean open the interrupt.
-   outb(PIC_S_DATA, 0xff);  //shield slave piece
+   //Open IRQ0(the interrupt of clock), IRQ1(the interrupt of keyboard), IRQ2(the interrupt from slaver piece) now, IF bit is 0, we must use "sti" to receive clock interrupt.
+   outb(PIC_M_DATA, 0xf8);  //The bit set to '1' is mean open the interrupt.
+   outb(PIC_S_DATA, 0xbf);  //Open IRQ14, receive the interrupt of disk controller.
 
    put_str("pic_init done\n");
 }

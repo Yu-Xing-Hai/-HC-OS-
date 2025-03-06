@@ -3,10 +3,6 @@
 #include "string.h"
 #include "syscall.h"
 
-#define va_start(ap, v) ap = (va_list)&v  //Initialize the pointer of ap, make ap point to the first unnamed arg "v".
-#define va_arg(ap, t) *((t*)(ap += 4))  //return the value of the next argument, in 32bit system, the unit of stack is 4Byte.
-#define va_end(ap) ap = NULL  //clean up ap.
-
 /*Translate integer to ascii*/
 //buf_ptr_addr: The pointer of a buffer which is used to store the answer of the translation.
 //base: The base of the number system, such as 2, 8, 10, 16.

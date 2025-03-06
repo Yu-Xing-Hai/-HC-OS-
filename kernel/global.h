@@ -74,11 +74,14 @@ struct gdt_desc {
 #define EFLAGS_IF_0   (0 << 9)        //close interrupt
 #define EFLAGS_IOPL_3  (3 << 12)
 #define EFLAGS_IOPL_0  (0 << 12)
+
 #define NULL  ((void*)0)
 #define DIV_ROUND_UP(X, STEP)  ((X + STEP - 1) / (STEP))
 #define bool int
 #define true 1
 #define false 0
+
+#define UNUSED(x) (void)(x)
 
 #define PG_SIZE 4096
 #endif

@@ -32,7 +32,7 @@ SECTION MBR vstart=0x7c00
 	mov byte [gs:0x08],'R'
 	mov byte [gs:0x09],0xA4
 
-	mov eax,LOADER_START_SECTOR  ;The first LBA sector address.
+	mov eax,LOADER_START_SECTOR  ;The loader's first LBA sector address.
 	mov bx,LOADER_BASE_ADDR      ;The address of writting to memory.(bx:base)
 	mov cx,4                     ;The number of sector of watting to read.
 	call rd_disk_m_16            ;call the function

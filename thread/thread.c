@@ -12,6 +12,8 @@
 
 #define PG_SIZE 4096
 
+struct task_struct* idle_thread;  //idle thread
+
 struct task_struct* main_thread;  //main thread's PCB
 struct list thread_ready_list;  //the list of ready, ready queue.
 struct list thread_all_list;   //the list of all task,it is a list include all thread we have created.
@@ -21,6 +23,16 @@ static struct list_elem* thread_tag;  //Be used to store thread's tag when we wa
 struct lock pid_lock;  //lock of pid
 
 extern void switch_to(struct task_struct* cur, struct task_struct* next);
+
+/*The thread whcih is running when system's status is free*/
+static void idle(void* arg) {
+    UNUSED(arg);
+    while(1) {
+        thread_block(TASK_BLOCKED);
+        //sti: open interrupt, hlt: close CPU(Only outside interrupt can wake up CPU)
+        asm volatile ("sti; hlt" : : : "memory");  //musk make surn interrupt is open when we execute 'halt'.
+    }
+}
 
 /*get the PCB pointer of current thread*/
 struct task_struct* running_thread() {
@@ -125,8 +137,11 @@ void schedule() {
     else {
         //temporary empty
     }
+
     //change new thread which is the first element in thread_ready_list.
-    ASSERT(!list_empty(&thread_ready_list));
+    if(list_empty(&thread_ready_list)) {
+        thread_unblock(idle_thread);
+    }
     thread_tag = NULL;
     thread_tag = list_pop(&thread_ready_list);
     struct task_struct* next = elem2entry(struct task_struct, general_tag, thread_tag); //general_tag is the name of member.
@@ -162,14 +177,32 @@ void thread_unblock(struct task_struct* pthread) {
     intr_set_status(old_status);
 }
 
+/*Yield the cpu, change other thread to running.*/
+void thread_yield(void) {
+    struct task_struct* cur = running_thread();
+    enum intr_status old_status = intr_disable();
+
+    ASSERT(!elem_find(&thread_ready_list, &cur->general_tag));
+    list_append(&thread_ready_list, &cur->general_tag);
+    cur->status = TASK_READY;
+    schedule();
+
+    intr_set_status(old_status);
+}
+
 /*initial the environment of thread*/
 void thread_init(void) {
     put_str("thread_init start\n");
+
     list_init(&thread_ready_list);
     list_init(&thread_all_list);
     lock_init(&pid_lock);
 
 /*create current main() function to main thread.*/
     make_main_thread();
+
+/*Create idle thread*/
+    idle_thread = thread_start("idle", 10, idle, NULL);
+
     put_str("thread_init done\n");
 }
