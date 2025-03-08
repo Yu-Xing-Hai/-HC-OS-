@@ -21,7 +21,7 @@ so,our system can offer 4(0x9b000-0x9a000 = 2^12 = 4KB) page of bitmap,these can
 #define PTE_IDX(addr) ((addr & 0x003ff000) >> 12)  //get mid 10 bit of 32 address
 
 /*The struct of memory pool, it will be used to create two object to manage kernel memory pool and user memory pool.*/
-struct pool {   //used to manage physic memory.
+struct pool {   //used to manage physic/virtual memory.
     struct bitmap pool_bitmap;
     uint32_t phy_addr_start;
     uint32_t pool_size;
@@ -39,7 +39,7 @@ struct arena {
 };
 
 /*The more index larger, the more bigger block size is.*/
-struct mem_block_desc k_block_descs[DESC_CNT];  //kernel memory block descriptor array, it will be define in PCB.
+struct mem_block_desc k_block_descs[DESC_CNT];  //This is kernel memory block descriptor array, u_block_descs will be define in PCB.
 
 struct pool kernel_pool, user_pool; //manage physic
 struct virtual_addr kernel_vaddr;   //manage virtual
@@ -325,7 +325,7 @@ void* sys_malloc(uint32_t size) {
         PF = PF_USER;
         pool_size = user_pool.pool_size;
         mem_pool = &user_pool;
-        descs = cur_thread->u_block_desc;
+        descs = cur_thread->u_block_descs;
     }
 
     if(!(size > 0 && size < pool_size)) {  //size must be in the range of (0, pool_size).
@@ -335,7 +335,7 @@ void* sys_malloc(uint32_t size) {
     struct mem_block* b;
     lock_acquire(&mem_pool->lock);
 
-/*Condition One: The size of applying is more than 1024*/
+    /*Condition One: The size of applying is more than 1024*/
     if(size > 1024) {
         uint32_t page_cnt = DIV_ROUND_UP(size + sizeof(struct arena), PG_SIZE);  //page_cnt is the number of page which we need to apply.
 
@@ -343,7 +343,7 @@ void* sys_malloc(uint32_t size) {
 
         if(a != NULL) {
             memset(a, 0, page_cnt * PG_SIZE);  //clean this memory space which you have applied.
-/*For large page frame, the desc is NULL, and large is true, the cnt is the number of page frame.*/
+            /*For large page frame, the desc is NULL, and large is true, the cnt is the number of page frame.*/
             a->desc = NULL;
             a->cnt = page_cnt;
             a->large = true;
@@ -356,7 +356,7 @@ void* sys_malloc(uint32_t size) {
         }
     }
     
-/*Condition Two: The size of applying is less than 1024*/
+    /*Condition Two: The size of applying is less than 1024*/
     else {
         uint8_t desc_idx;
         /*Match the suitable size of memory block in memory-block-descriptor.*/
@@ -373,14 +373,14 @@ void* sys_malloc(uint32_t size) {
                 return NULL;
             }
             memset(a, 0, PG_SIZE);
-/*For little memory block, the desc is the corresponding mem_block_desc, and large is false, the cnt is the number of blocks in one arena.*/
+            /*For little memory block, the desc is the corresponding mem_block_desc, and large is false, the cnt is the number of blocks in one arena.*/
             a->desc = &descs[desc_idx];
             a->large = false;
             a->cnt = descs[desc_idx].blocks_per_arena;
             uint32_t block_idx;           
             enum intr_status old_status = intr_disable();
 
-/*Begin to split the arena to little mem_block, and add them to free_list in mem_block_desc.*/             
+            /*Begin to split the arena to little mem_block, and add them to free_list in mem_block_desc.*/             
             for(block_idx = 0; block_idx < descs[desc_idx].blocks_per_arena; block_idx++) {
                 b = arena2block(a, block_idx);
                 ASSERT(!elem_find(&a->desc->free_list, &b->free_elem));

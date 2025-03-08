@@ -36,7 +36,8 @@ loader_start:  ;running Function program
 ;ZERO:get total memory size.
 ;First:open the A20
 ;Second:load the GDT
-;Third:make the PE of CR0 to "1".
+;Third:make the PE(Protedted Enable) of CR0 to "1".
+;Forth:Create PDT and PT
 ;---------------------------------------------------------------------
 	;ZERO: Get total memory size
 	xor ebx, ebx

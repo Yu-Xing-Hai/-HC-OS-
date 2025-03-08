@@ -20,13 +20,32 @@ static void intr_timer_handler(void) {
     ASSERT(cur_thread->stack_magic == 0x12345678);
 
     cur_thread->elapsed_ticks++;
-    ticks++; //record all ticks from first clock interrupt to now.
+    ticks++; //record ticks's happen times from first clock interrupt to now.
     if(cur_thread->ticks == 0) {
         schedule();
     }
     else {
         cur_thread->ticks--;
     }
+}
+
+/*Make task sleep, purppose is to delay*/
+static void ticks_to_sleep(uint32_t sleep_ticks) {
+    uint32_t start_tick = ticks;  //ticks: global parameter
+
+    while(ticks - start_tick < sleep_ticks) {
+        thread_yield();  //Yield the CPU to other threads
+    }
+}
+
+/*
+function: delay the process for m_seconds
+1s = 1000ms, ms : millisecond
+*/
+void mtime_sleep(uint32_t m_seconds) {
+    uint32_t sleep_ticks = DIV_ROUND_UP(m_seconds, mil_seconds_per_intr);  //convert time to the number of tick.
+    ASSERT(sleep_ticks > 0);
+    ticks_to_sleep(sleep_ticks);
 }
 
 void timer_init() {
