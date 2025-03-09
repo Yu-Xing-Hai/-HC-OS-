@@ -19,10 +19,10 @@ int main(void) {
 	put_str("I am kernel\n");
 	init_all();
 	intr_enable(); //Let CPU receive clock interrupt by set IF bit to 1.
-	process_execute(u_prog_a, "user_prog_a");
+	/*process_execute(u_prog_a, "user_prog_a");
 	process_execute(u_prog_b, "user_prog_b");
 	thread_start("k_thread_a", 10, k_thread_a, "I am thread_a.");
-	thread_start("k_thread_b", 10, k_thread_b, "I am thread_b.");
+	thread_start("k_thread_b", 10, k_thread_b, "I am thread_b.");*/
 	while(1);
 	return 0;
 }

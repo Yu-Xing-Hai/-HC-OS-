@@ -145,7 +145,7 @@ static void write2sector(struct disk* hd, void* buf, uint8_t sec_cnt) {
     outsw(reg_data(hd->my_channel), buf, size_in_byte / 2);
 }
 
-/*Delay 30s, yield the CPU*/
+/*Delay 30s, yield the CPU, if the disk is not ready after 30s, return false to PANIC*/
 static bool busy_wait(struct disk* hd) {  //Make sure the disk is free.
     struct ide_channel* channel = hd->my_channel;
     uint16_t time_limit = 30 * 1000;
@@ -285,23 +285,23 @@ static void identify_disk(struct disk* hd) {
 /*Scan the patitions in sector which address is ext_lba*/
 static void partition_scan(struct disk* hd, uint32_t ext_lba) {
     struct boot_sector* bs = sys_malloc(sizeof(struct boot_sector));
-    ide_read(hd, ext_lba, bs, 1);
+    ide_read(hd, ext_lba, bs, 1);  //Read the boot sector(have be created) from disk to bs.
     uint8_t part_idx = 0;
     struct partition_table_entry* p = bs->partition_table;
 
-    /*Traverse patition table entries*/
-    while(part_idx < 4) {
+    /*Traverse 4 patition table entries*/
+    while(part_idx++ < 4) {
         if(p->fs_type == 0x5) {  //If the file system's type is extend patition
             if(ext_lba_base != 0) {
                 partition_scan(hd, p->start_lba + ext_lba_base);  //The start_lba of Sub-extend-patition is the offset by address of total-extend-patition.
             }
-            else {  //p is pointed the total-extend-patition-table-entry in sector which is include MBR.
+            else {  //ext_lba_base = 0 indicate that we first times to read bootsector.
                 ext_lba_base = p->start_lba;  //Total-extend-patition's start address.
                 partition_scan(hd, p->start_lba);
             }
         }
         else if(p->fs_type != 0) {  //The patition's type is effective.
-            if(ext_lba == 0) {  //Not is extend, so, is primary patition.
+            if(ext_lba == 0) {  //Not is extend, so, it is primary patition.
                 hd->prim_parts[p_no].start_lba = ext_lba + p->start_lba;
                 hd->prim_parts[p_no].sec_cnt = p->sec_cnt;
                 hd->prim_parts[p_no].my_disk = hd;
@@ -317,7 +317,7 @@ static void partition_scan(struct disk* hd, uint32_t ext_lba) {
                 list_append(&partition_list, &hd->logic_parts[l_no].part_tag);
                 sprintf(hd->logic_parts[l_no].name, "%s%d", hd->name, l_no + 5);
                 l_no++;
-                if(l_no >= 8)
+                if(l_no >= 8)  //only support 8 logic partitions at most.
                     return;
             }
         }
@@ -330,7 +330,7 @@ static void partition_scan(struct disk* hd, uint32_t ext_lba) {
 static bool partition_info(struct list_elem* pelem, int arg) {
     UNUSED(arg);
     struct partition* part = elem2entry(struct partition, part_tag, pelem);
-    printk("  %s start_lba:0x%x, sec_cnt:-x%x\n", part->name, part->start_lba, part->sec_cnt);
+    printk("  %s start_lba:0x%x, sec_cnt:0x%x\n", part->name, part->start_lba, part->sec_cnt);
 
     return false;
 }
@@ -370,15 +370,19 @@ void ide_init() {
         lock_init(&channel->lock);  //Initialize the lock of the channel
 
         /*Used to block or wake up the process.*/
-        sema_init(&channel->disk_done, 0);  //Initialize the semaphore of the channel, the initial value is 0.
+        sema_init(&channel->disk_done, 1);  //Initialize the semaphore of the channel, the initial value is 1.
+
+        list_init(&partition_list);  //The author is forget to initialize the partition_list, so, we initialize it here.
 
         /*Process all disk in each channel*/
         while(dev_no < 2) {
             struct disk* hd = &channel->devices[dev_no];
             hd->my_channel = channel;
-            hd->dev_no = dev_no;  //Master 0 and slaver 1
+            hd->dev_no = dev_no;  //Master is 0 and is slaver 1
             sprintf(hd->name, "sd%c", 'a' + channel_no * 2 + dev_no);  //Write the disk's name to disk->name.
+
             identify_disk(hd);  //Get the disk's parameters
+            
             if(dev_no != 0) {  //we just have two disk, hd60M.img(sda) and hd80M.img(sdb),and hd60M.img(sda) don't have patitions.
                 partition_scan(hd, 0);
             }

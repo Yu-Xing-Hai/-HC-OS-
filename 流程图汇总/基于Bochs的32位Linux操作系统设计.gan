@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?><project name="基于Bochs的32位Linux操作系统设计" company="" webLink="http://" view-date="2024-12-29" view-index="0" gantt-divider-location="493" resource-divider-location="300" version="3.3.3312" locale="zh_CN">
+<?xml version="1.0" encoding="UTF-8"?><project name="基于Bochs的32位Linux操作系统设计" company="" webLink="http://" view-date="2025-02-01" view-index="0" gantt-divider-location="493" resource-divider-location="300" version="3.3.3312" locale="zh_CN">
     <description/>
-    <view zooming-state="default:5" id="gantt-chart">
+    <view zooming-state="default:8" id="gantt-chart">
         <field id="tpd3" name="名称" width="297" order="0"/>
         <field id="tpd4" name="开始日期" width="90" order="1"/>
         <field id="tpd5" name="结束日期" width="105" order="2"/>
@@ -79,19 +79,19 @@
         <task id="7" uid="6931fb29f93c417781a7f10ac7173c53" name="编写操作系统内核——线程实现" color="#ff99cc" meeting="false" start="2025-01-11" duration="5" complete="0" expand="true">
             <depend id="10" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="10" uid="6288515ca3f943f1b1aa13931ffb3f7c" name="编写操作系统内核——输入输出系统实现" color="#0066cc" meeting="false" start="2025-01-16" duration="5" complete="0" expand="true">
+        <task id="10" uid="6288515ca3f943f1b1aa13931ffb3f7c" name="编写操作系统内核——输入输出系统实现" color="#0066cc" meeting="false" start="2025-01-16" duration="6" complete="0" expand="true">
             <depend id="11" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="11" uid="b4c4a6a8de084494bd91e147e993e753" name="编写操作系统内核——用户进程实现" meeting="false" start="2025-01-21" duration="10" complete="0" expand="true">
+        <task id="11" uid="b4c4a6a8de084494bd91e147e993e753" name="编写操作系统内核——用户进程实现" meeting="false" start="2025-01-22" duration="26" complete="0" expand="true">
             <depend id="12" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="12" uid="0dc4f08da7fb40a8b3d889b94d649f9e" name="编写操作系统内核——硬盘驱动程序编写" meeting="false" start="2025-01-31" duration="5" complete="0" expand="true">
+        <task id="12" uid="0dc4f08da7fb40a8b3d889b94d649f9e" name="编写操作系统内核——硬盘驱动程序编写" meeting="false" start="2025-02-17" duration="20" complete="0" expand="true">
             <depend id="13" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="13" uid="539a2daaff8e47d5ac190276389b2464" name="编写操作系统内核——文件系统实现" meeting="false" start="2025-02-05" duration="10" complete="0" expand="true">
+        <task id="13" uid="539a2daaff8e47d5ac190276389b2464" name="编写操作系统内核——文件系统实现" meeting="false" start="2025-03-09" duration="10" complete="0" expand="true">
             <depend id="14" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="14" uid="4651b245c1d14b119c393b1f11383dfb" name="编写操作系统内核——系统交互实现" meeting="false" start="2025-02-15" duration="5" complete="0" expand="true"/>
+        <task id="14" uid="4651b245c1d14b119c393b1f11383dfb" name="编写操作系统内核——系统交互实现" meeting="false" start="2025-03-19" duration="5" complete="0" expand="true"/>
     </tasks>
     <resources>
         <resource id="1" name="《操作系统真相还原》" function="Default:1" contacts="" phone="">
