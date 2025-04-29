@@ -18,8 +18,6 @@ struct inode {
     /*i_sectors[0~11] is the direct block's pointer, the i_secotrs[12] be used to store one-level in-direct block's pointer*/
     uint32_t i_sectors[13];  //Our data block's size is euqal with sector, so i_sectors is same to i_block;
     struct list_elem inode_tag;
-
-
 };
 
 #endif

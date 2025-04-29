@@ -3,6 +3,7 @@
 
 #include "stdint.h"
 #include "fs.h"
+#include "inode.h"
 
 #define MAX_FILE_NAME_LEN  16
 

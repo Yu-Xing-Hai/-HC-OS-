@@ -8,7 +8,7 @@
 /*The strcuture of Partition*/
 struct partition {
     uint32_t start_lba;
-    uint32_t sec_cnt;
+    uint32_t sec_cnt;  //The mumber os sectors
     struct disk* my_disk;  //The disk which the partition belongs to.
     struct list_elem part_tag;  //The tag of this partition(used in queue)
     char name[8];  //The name of the partition
