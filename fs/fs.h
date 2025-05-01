@@ -15,4 +15,6 @@ enum file_types {
     FT_DIRECTORY  //The type of directory, it's value is 2
 };
 
+void filesys_init(void);
+
 #endif

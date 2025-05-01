@@ -15,7 +15,7 @@ struct dir {
     struct inode* ionde;
     uint32_t dir_pos;
     uint32_t dir_buf[512];
-}
+};
 
 /*The structure of directory entry*/
 struct dir_entry {

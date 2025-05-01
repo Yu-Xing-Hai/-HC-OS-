@@ -8,6 +8,7 @@
 #include "keyboard.h"
 #include "tss.h"
 #include "syscall-init.h"
+#include "fs.h"
 
 void init_all() {
    put_str("init_all\n");
@@ -20,4 +21,5 @@ void init_all() {
    tss_init();
    syscall_init();
    ide_init();
+   filesys_init();
 }

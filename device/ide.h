@@ -23,7 +23,7 @@ struct disk {
     char name[8];
     struct ide_channel* my_channel;
     uint8_t dev_no;  //Master is 0, Slave is 1.
-    struct partition prim_parts[4];  //The main partition's number is 4.
+    struct partition prim_parts[4];  //The prim partition's number is 4.
     struct partition logic_parts[8];  //The logic partition's number is 8.
 };
 
@@ -37,6 +37,9 @@ struct ide_channel {
     struct semaphore disk_done;  //The semaphore of the channel, used to block or wake up the drive-program.
     struct disk devices[2];  //The two devices of the channel(master and slave)
 };
+
+extern struct ide_channel channels[2];  //The two channels
+extern uint8_t channel_cnt;  //The number of channel which is caculated by disk_cnt
 
 void intr_hd_handler(uint8_t irq_no);
 void ide_read(struct disk* hd, uint32_t lba, void* buf, uint32_t sec_cnt);

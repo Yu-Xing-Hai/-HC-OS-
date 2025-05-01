@@ -112,8 +112,8 @@ static void page_table_add(void* _vaddr, void* _page_phyaddr) {
     uint32_t* pde = pde_ptr(vaddr);
     uint32_t* pte = pte_ptr(vaddr);
 
-/**************************************8pay attention!!*******************************/
-/*if we want execute *pte, we must make sure we have finished create pde,if we don's create pde and execute *pte, we will make page_fault*/
+/**************************************pay attention!!*******************************/
+/*if we want execute *pte, we must make sure we have finished create pde,if we don't create pde and execute *pte, we will make page_fault*/
     if(*pde & 0x00000001) {  //the attribute of "P",it indicate whether this pte exist.
         //ASSERT(!(*pte & 0x00000001));  //if we want create pte,so,it's "P" must 0.
         if(!(*pte & 0x00000001)) {  //check more times to make sure safety.

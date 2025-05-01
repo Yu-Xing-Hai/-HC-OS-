@@ -136,7 +136,7 @@ mov eax, KERNEL_START_SECTOR ;the sector number of kernel.bin in disk.
 mov ebx, KERNEL_BIN_BASE_ADDR ;After getting the kernel.bin from disk,writing kernel.bin to address in ebx in memory.
 mov ecx, 200 ;The number of watting to be read from sector.
 ;--------------mistake-------------------
-call rd_disk_m_32      ;This function have some problem,maybe can not correctly use 32 bit register.
+call rd_disk_m_32      ;Load kernel to memory
 ;----------------------------------------
 
 ;Create PDT and PT and initial（Page directory table and Page table）
