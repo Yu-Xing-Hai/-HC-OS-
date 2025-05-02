@@ -15,7 +15,7 @@ struct partition {
     struct super_block* sb;  //We define that one sector is one block.
     struct bitmap block_bitmap;  //The bitmap which is used to manage the block.
     struct bitmap inode_bitmap;
-    struct list open_inodes;
+    struct list open_inodes;  //The files be opened at this moment.
 };
 
 /*The structure of Disk*/
@@ -40,6 +40,7 @@ struct ide_channel {
 
 extern struct ide_channel channels[2];  //The two channels
 extern uint8_t channel_cnt;  //The number of channel which is caculated by disk_cnt
+extern struct list partition_list;  //The list of partition
 
 void intr_hd_handler(uint8_t irq_no);
 void ide_read(struct disk* hd, uint32_t lba, void* buf, uint32_t sec_cnt);

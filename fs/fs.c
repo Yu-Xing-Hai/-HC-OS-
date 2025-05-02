@@ -1,5 +1,6 @@
 #include "fs.h"
 #include "stdint.h"
+#include "stdbool.h"
 #include "debug.h"
 #include "global.h"
 #include "inode.h"
@@ -9,6 +10,62 @@
 #include "ide.h"
 #include "string.h"
 #include "memory.h"
+#include "list.h"
+
+
+struct partition* cur_part;  //The default partition which we operate
+
+/*Find the partition in partition-Link which name is "part_name", then, get it's pointer to cur_part.*/
+static bool mount_partition(struct list_elem* pelem, int arg) {
+    char* part_name = (char*)arg;
+    struct partition* part = elem2entry(struct partition, part_tag, pelem);
+    if(!strcmp(part->name, part_name)) {  //strcmp: if equal, return 0
+        cur_part = part;  //Find the default partition
+        struct disk* hd = cur_part->my_disk;
+
+        /*sb_buf is used to store super-block which is read from disk*/
+        struct super_block* sb_buf = (struct super_block*)sys_malloc(SECTOR_SIZE);
+
+        /*Create cur_part's super block in memory*/
+        cur_part->sb = (struct super_block*)sys_malloc(sizeof(struct super_block));
+        if(cur_part->sb == NULL) {
+            PANIC("alloc memory failed!");
+        }
+
+        /*Read in super block*/
+        memset(sb_buf, 0, SECTOR_SIZE);
+        ide_read(hd, cur_part->start_lba + 1, sb_buf, 1);
+
+        /*Copy the super block information from sb_buf to cur_part->sb*/
+        memcpy(cur_part->sb, sb_buf, sizeof(struct super_block));
+
+        /*Read in block bitmap from disk to memory*/
+        cur_part->block_bitmap.bits = (uint8_t*)sys_malloc(sb_buf->block_bitmap_sects * SECTOR_SIZE);
+
+        if(cur_part->block_bitmap.bits == NULL) {
+            PANIC("alloc memory failed!");
+        }
+        cur_part->block_bitmap.btmp_bytes_len = sb_buf->block_bitmap_sects * SECTOR_SIZE;
+
+        ide_read(hd, sb_buf->block_bitmap_lba, cur_part->block_bitmap.bits, sb_buf->block_bitmap_sects);
+
+        /*Read in inode bitmap from disk to memory*/
+        cur_part->inode_bitmap.bits = (uint8_t*)sys_malloc(sb_buf->inode_bitmap_sects * SECTOR_SIZE);
+
+        if(cur_part->inode_bitmap.bits == NULL) {
+            PANIC("alloc memory failed!");
+        }
+        cur_part->inode_bitmap.btmp_bytes_len = sb_buf->inode_bitmap_sects * SECTOR_SIZE;
+
+        ide_read(hd, sb_buf->inode_bitmap_lba, cur_part->inode_bitmap.bits, sb_buf->inode_bitmap_sects);
+
+        list_init(&cur_part->open_inodes);
+        printk("mount %s done!", part->name);
+
+        return true;  //When return true, list_traversal() will stop.
+    }
+    return false;  //Let the list_traversal() to continue
+}
 
 /*Initialized the partition's meta-information, create the file system*/
 static void partition_format(struct partition* part) {
@@ -152,4 +209,9 @@ void filesys_init() {
         channel_no++;  //next channel
     }
     sys_free(sb_buf);
+
+    /*Define an default partition to operate*/
+    char default_part[8] = "sdb1";
+    /*mount the partition*/
+    list_traversal(&partition_list, mount_partition, (int)default_part);
 }
