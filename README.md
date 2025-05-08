@@ -351,3 +351,6 @@ struct pool {   //used to manage physic memory.
 ## 硬盘驱动
 ## 文件系统
 ## 系统交互
+# 四、个人技术博客
+- [知乎](https://www.zhihu.com/people/Yu-Xing-Hai)
+- [博客园](https://www.cnblogs.com/Yu-Xing-Hai)
