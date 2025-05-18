@@ -16,6 +16,7 @@
 struct partition* cur_part;  //The default partition which we operate
 
 /*Find the partition in partition-Link which name is "part_name", then, get it's pointer to cur_part.*/
+/*Mount's essence: store the partition's meta-information in memory*/
 static bool mount_partition(struct list_elem* pelem, int arg) {
     char* part_name = (char*)arg;
     struct partition* part = elem2entry(struct partition, part_tag, pelem);

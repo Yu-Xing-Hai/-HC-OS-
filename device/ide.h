@@ -15,7 +15,7 @@ struct partition {
     struct super_block* sb;  //We define that one sector is one block.
     struct bitmap block_bitmap;  //The bitmap which is used to manage the block.
     struct bitmap inode_bitmap;
-    struct list open_inodes;  //The files be opened at this moment.
+    struct list open_inodes;  //It's a list which is mean that the files be opened at this moment, this list's function is to upgrade the speed of opetating inode.
 };
 
 /*The structure of Disk*/

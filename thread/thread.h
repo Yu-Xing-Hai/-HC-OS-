@@ -4,6 +4,8 @@
 #include "list.h"
 #include "memory.h"
 
+#define MAX_FILES_OPEN_PER_PROC 8  //
+
 /*will be used as parameter in create-thread function*/
 typedef void thread_func(void*);
 typedef int16_t pid_t;
@@ -67,6 +69,9 @@ struct task_struct {
     uint8_t priority;
     uint8_t ticks;  //the piece of time (task running in CPU), one clock interrupt occured, ticks--.
     uint32_t elapsed_ticks; //elapsed: have used.
+
+    int32_t fd_table[MAX_FILES_OPEN_PER_PROC];  //The table of file descriptor, each task can open 8 files(you can change in future)
+
     struct list_elem general_tag;
     struct list_elem all_list_tag;
 
