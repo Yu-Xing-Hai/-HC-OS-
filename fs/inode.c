@@ -8,13 +8,6 @@
 #include "memory.h"
 #include "interrupt.h"
 
-/*Used to store the inode's position in disk*/
-struct inode_position {
-    bool two_sec;  //whether the inode cross the sector
-    uint32_t sec_lba;  //The sector which inode's start address begin in
-    uint32_t off_size;  //The offset of inode in sector(unit is byte)
-};
-
 /*Locate the inode's lba and offset in sector and write to inode_pos*/
 /*
 Pay attention: the inode's size is not equal to sector, we define the data block's size is equal to sector.

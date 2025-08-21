@@ -9,7 +9,7 @@
 
 /*
 The structure of directory
-It note be stored in disk, just be created in memory when we operate directory
+It not be stored in disk, just be created in memory when we operate directory, when we finished operating, we will release it.
 */
 struct dir {
     struct inode* ionde;
